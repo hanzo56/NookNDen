@@ -75,7 +75,18 @@ const roomFeatures = [
 
 export default function RoomShowcase() {
   return (
-    <section className="relative bg-white py-20 lg:py-24 px-6 overflow-hidden">
+    <section className="relative bg-white py-20 lg:py-24 px-6 overflow-x-clip">
+      <style>{`
+        .room-card {
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          cursor: pointer;
+        }
+        .room-card:hover {
+          transform: scale(1.25);
+          z-index: 10;
+          box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+      `}</style>
       {/* Decorative blurs */}
       <div className="absolute -top-48 -left-48 size-96 bg-[#d0fae5] rounded-full blur-[64px] opacity-20" />
       <div className="absolute -bottom-48 -right-48 size-96 bg-[#cbfbf1] rounded-full blur-[64px] opacity-20" />
@@ -98,11 +109,11 @@ export default function RoomShowcase() {
         </div>
 
         {/* Room Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 overflow-visible">
           {rooms.map((room) => (
             <div
               key={room.name}
-              className="bg-white border-2 border-[#f1f5f9] rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-200"
+              className="room-card bg-white border-2 border-[#f1f5f9] rounded-2xl overflow-hidden shadow-lg"
             >
               <div className="relative h-48 overflow-hidden">
                 <Image
