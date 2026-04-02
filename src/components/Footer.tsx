@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Home, Mail, Phone, MapPin } from "lucide-react";
 
 const quickLinks = ["Home", "Features", "Inventory", "About Us", "Contact"];
@@ -121,14 +122,18 @@ export default function Footer() {
             &copy; 2026 NookNDen. All rights reserved.
           </p>
           <div className="flex gap-6">
-            {["Privacy", "Terms", "Cookies"].map((item) => (
-              <a
-                key={item}
-                href="#"
+            {[
+              { label: "Privacy", href: "/privacy" },
+              { label: "Terms", href: "/terms" },
+              { label: "Cookies", href: "/cookies" },
+            ].map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
                 className="text-sm text-[#90a1b9] hover:text-white transition-colors"
               >
-                {item}
-              </a>
+                {item.label}
+              </Link>
             ))}
           </div>
         </div>

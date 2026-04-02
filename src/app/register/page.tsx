@@ -240,14 +240,14 @@ export default function RegisterPage() {
               <p>
                 By tapping Submit, you agree to create an account and to
                 NookNDen&apos;s{" "}
-                <a href="#" className="font-semibold text-[#009966]">Terms</a>,{" "}
-                <a href="#" className="font-semibold text-[#009966]">Privacy Policy</a>{" "}
+                <Link href="/terms" className="font-semibold text-[#009966] hover:underline">Terms</Link>,{" "}
+                <Link href="/privacy" className="font-semibold text-[#009966] hover:underline">Privacy Policy</Link>{" "}
                 and{" "}
-                <a href="#" className="font-semibold text-[#009966]">Cookies Policy</a>.
+                <Link href="/cookies" className="font-semibold text-[#009966] hover:underline">Cookies Policy</Link>.
               </p>
               <p>
                 The{" "}
-                <a href="#" className="font-semibold text-[#009966]">Privacy Policy</a>{" "}
+                <Link href="/privacy" className="font-semibold text-[#009966] hover:underline">Privacy Policy</Link>{" "}
                 describes the ways we can use the information you create when you
                 create an account. For example, we use this information to
                 provide, personalize and improve our products, including ads.
