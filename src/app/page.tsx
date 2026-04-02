@@ -116,7 +116,7 @@ export default function LandingPage() {
 
           <Link
             href="/register"
-            className="mt-4 inline-flex items-center gap-2 bg-white text-[#c25000] font-semibold text-lg px-8 py-4 rounded-2xl shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-200"
+            className="mt-4 inline-flex items-center gap-2 bg-yellow-400 text-black border-2 border-black font-semibold text-lg px-8 py-4 rounded-2xl shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-200"
           >
             Get Started
             <ArrowRight className="size-5" />
