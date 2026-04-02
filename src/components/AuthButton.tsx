@@ -18,7 +18,7 @@ export default function AuthButton() {
   if (session) {
     return (
       <button
-        onClick={() => signOut({ callbackUrl: "/login?loggedOut=true" })}
+        onClick={() => signOut({ callbackUrl: "/" })}
         className="absolute top-6 right-6 z-20 inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-white/20 backdrop-blur-sm transition-all duration-200 cursor-pointer"
       >
         <LogOut className="size-4" />

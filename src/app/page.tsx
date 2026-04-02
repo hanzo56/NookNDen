@@ -14,6 +14,13 @@ import {
 } from "lucide-react";
 import Footer from "@/components/Footer";
 import AuthButton from "@/components/AuthButton";
+import RoomShowcase from "@/components/RoomShowcase";
+import AssetTracking from "@/components/AssetTracking";
+import {
+  ParallaxBackground,
+  HeroContent,
+  ScrollReveal,
+} from "@/components/ScrollParallax";
 
 const HERO_BG =
   "https://www.figma.com/api/mcp/asset/54c7bde6-62ed-4c4b-99db-f5349d369187";
@@ -73,24 +80,22 @@ export default function LandingPage() {
   return (
     <main className="w-full overflow-hidden">
       {/* ─── Hero ─── */}
-      <section className="relative min-h-[700px] lg:min-h-[820px] flex flex-col items-center justify-center text-center px-6 py-24 lg:py-32">
-        <Image
-          src={HERO_BG}
-          alt=""
-          fill
-          priority
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-[rgba(0,79,59,.85)] via-[rgba(1,102,48,.75)] to-[rgba(11,79,74,.85)]" />
+      <section className="relative min-h-[700px] lg:min-h-[820px] flex flex-col items-center justify-center text-center px-6 py-24 lg:py-32 overflow-hidden">
+        <ParallaxBackground>
+          <Image src={HERO_BG} alt="" fill priority className="object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[rgba(0,79,59,.85)] via-[rgba(1,102,48,.75)] to-[rgba(11,79,74,.85)]" />
+        </ParallaxBackground>
 
         <AuthButton />
 
-        <div className="relative z-10 flex flex-col items-center max-w-3xl mx-auto gap-6">
-          {/* Icon */}
+        <HeroContent className="relative z-10 flex flex-col items-center max-w-3xl mx-auto gap-6">
           <div className="relative">
             <div className="absolute inset-0 bg-white/20 rounded-full blur-2xl scale-150" />
             <div className="relative size-[88px] lg:size-[114px] rounded-3xl bg-white/10 border border-white/20 flex items-center justify-center">
-              <Home className="size-10 lg:size-14 text-white" strokeWidth={1.5} />
+              <Home
+                className="size-10 lg:size-14 text-white"
+                strokeWidth={1.5}
+              />
             </div>
           </div>
 
@@ -116,10 +121,9 @@ export default function LandingPage() {
             Get Started
             <ArrowRight className="size-5" />
           </Link>
-        </div>
+        </HeroContent>
 
-        {/* Stats */}
-        <div className="relative z-10 mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl">
+        <HeroContent className="relative z-10 mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl">
           {[
             { value: "100%", label: "Centralized" },
             { value: "\u221E", label: "Inventory Items" },
@@ -135,46 +139,58 @@ export default function LandingPage() {
               <p className="text-base text-[#d0fae5] mt-1">{stat.label}</p>
             </div>
           ))}
-        </div>
+        </HeroContent>
       </section>
 
       {/* ─── Features ─── */}
-      <section
-        id="features"
-        className="relative bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] py-20 lg:py-24 px-6"
-      >
-        <div className="max-w-[1280px] mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f172b] tracking-tight">
-              Everything You Need
-            </h2>
-            <p className="mt-5 text-lg md:text-xl text-[#45556c] max-w-xl mx-auto leading-relaxed">
-              Comprehensive tools to manage your home&apos;s complete inventory
-              and maintenance history
-            </p>
-          </div>
+      <ScrollReveal>
+        <section
+          id="features"
+          className="relative bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] py-20 lg:py-24 px-6"
+        >
+          <div className="max-w-[1280px] mx-auto">
+            <div className="text-center mb-14">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f172b] tracking-tight">
+                Everything You Need
+              </h2>
+              <p className="mt-5 text-lg md:text-xl text-[#45556c] max-w-xl mx-auto leading-relaxed">
+                Comprehensive tools to manage your home&apos;s complete
+                inventory and maintenance history
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature) => (
-              <div
-                key={feature.title}
-                className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
-              >
-                <div className="size-12 rounded-xl bg-gradient-to-br from-[#00bc7d] to-[#009689] flex items-center justify-center mb-5">
-                  <feature.icon className="size-6 text-white" strokeWidth={1.8} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {features.map((feature) => (
+                <div
+                  key={feature.title}
+                  className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
+                >
+                  <div className="size-12 rounded-xl bg-gradient-to-br from-[#00bc7d] to-[#009689] flex items-center justify-center mb-5">
+                    <feature.icon
+                      className="size-6 text-white"
+                      strokeWidth={1.8}
+                    />
+                  </div>
+                  <h3 className="text-lg font-semibold text-[#0f172b] mb-2">
+                    {feature.title}
+                  </h3>
+                  <p className="text-sm text-[#45556c] leading-relaxed">
+                    {feature.description}
+                  </p>
                 </div>
-                <h3 className="text-lg font-semibold text-[#0f172b] mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-sm text-[#45556c] leading-relaxed">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </ScrollReveal>
 
+      <ScrollReveal>
+        <RoomShowcase />
+      </ScrollReveal>
+
+      <ScrollReveal>
+        <AssetTracking />
+      </ScrollReveal>
       <Footer />
     </main>
   );

@@ -39,7 +39,7 @@ export default function Footer() {
                   >
                     <SocialIcon name={social} />
                   </a>
-                )
+                ),
               )}
             </div>
           </div>
@@ -86,14 +86,14 @@ export default function Footer() {
                 <Mail className="size-5 text-[#90a1b9] shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm text-[#90a1b9]">Email</p>
-                  <p className="text-sm text-white">support@nooknden.com</p>
+                  <a href="mailto:contactus@nooknden.com" className="text-sm text-white hover:underline">contactus@nooknden.com</a>
                 </div>
               </li>
               <li className="flex gap-3">
                 <Phone className="size-5 text-[#90a1b9] shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm text-[#90a1b9]">Phone</p>
-                  <p className="text-sm text-white">(555) 123-4567</p>
+                  <p className="text-sm text-white">(213) 399-0139</p>
                 </div>
               </li>
               <li className="flex gap-3">
@@ -101,11 +101,13 @@ export default function Footer() {
                 <div>
                   <p className="text-sm text-[#90a1b9]">Address</p>
                   <p className="text-sm text-white">
-                    123 Home Street
+                    Administrative Division
                     <br />
-                    Suite 100
+                    3434 S. Grand Avenue
                     <br />
-                    New York, NY 10001
+                    3rd Floor
+                    <br />
+                    Los Angeles, CA 90007
                   </p>
                 </div>
               </li>
