@@ -11,9 +11,9 @@ import {
   FileText,
   ShoppingBag,
   Home,
-  LogIn,
 } from "lucide-react";
 import Footer from "@/components/Footer";
+import AuthButton from "@/components/AuthButton";
 
 const HERO_BG =
   "https://www.figma.com/api/mcp/asset/54c7bde6-62ed-4c4b-99db-f5349d369187";
@@ -83,14 +83,7 @@ export default function LandingPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-br from-[rgba(0,79,59,.85)] via-[rgba(1,102,48,.75)] to-[rgba(11,79,74,.85)]" />
 
-        {/* Login button */}
-        <Link
-          href="/login"
-          className="absolute top-6 right-6 z-20 inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-white/20 backdrop-blur-sm transition-all duration-200"
-        >
-          <LogIn className="size-4" />
-          Log In
-        </Link>
+        <AuthButton />
 
         <div className="relative z-10 flex flex-col items-center max-w-3xl mx-auto gap-6">
           {/* Icon */}
@@ -116,13 +109,13 @@ export default function LandingPage() {
             maintain your property&apos;s value and efficiency.
           </p>
 
-          <a
-            href="#features"
+          <Link
+            href="/register"
             className="mt-4 inline-flex items-center gap-2 bg-white text-[#007a55] font-semibold text-lg px-8 py-4 rounded-2xl shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-200"
           >
             Get Started
             <ArrowRight className="size-5" />
-          </a>
+          </Link>
         </div>
 
         {/* Stats */}
