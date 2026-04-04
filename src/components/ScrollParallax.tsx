@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, ReactNode } from "react";
+import { useEffect, useRef, useState, ReactNode, Children, isValidElement, cloneElement, ReactElement } from "react";
 
 function useReducedMotion() {
   const [reduced, setReduced] = useState(false);
@@ -175,6 +175,135 @@ export function ScrollReveal({
           "opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1)",
         willChange: "transform, opacity",
       }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/**
+ * Staggered reveal — each child animates in with an increasing delay.
+ */
+export function StaggerChildren({
+  children,
+  className = "",
+  staggerMs = 100,
+}: {
+  children: ReactNode;
+  className?: string;
+  staggerMs?: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const reducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    if (reducedMotion) {
+      setIsVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [reducedMotion]);
+
+  return (
+    <div ref={ref} className={className}>
+      {Children.map(children, (child, i) => {
+        if (!isValidElement(child)) return child;
+        const element = child as ReactElement<{ style?: React.CSSProperties; className?: string }>;
+        return cloneElement(element, {
+          style: {
+            ...element.props.style,
+            ...(reducedMotion
+              ? {}
+              : {
+                  opacity: isVisible ? 1 : 0,
+                  transform: isVisible
+                    ? "translateY(0) scale(1)"
+                    : "translateY(40px) scale(0.95)",
+                  transition: `opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${i * staggerMs}ms, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${i * staggerMs}ms`,
+                }),
+          },
+        });
+      })}
+    </div>
+  );
+}
+
+/**
+ * Fade-in from a direction when scrolled into view.
+ */
+export function FadeIn({
+  children,
+  direction = "up",
+  className = "",
+  delay = 0,
+}: {
+  children: ReactNode;
+  direction?: "up" | "down" | "left" | "right";
+  className?: string;
+  delay?: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const reducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    if (reducedMotion) {
+      setIsVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [reducedMotion]);
+
+  const transforms: Record<string, string> = {
+    up: "translateY(50px)",
+    down: "translateY(-50px)",
+    left: "translateX(50px)",
+    right: "translateX(-50px)",
+  };
+
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={
+        reducedMotion
+          ? {}
+          : {
+              opacity: isVisible ? 1 : 0,
+              transform: isVisible ? "translate(0)" : transforms[direction],
+              transition: `opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
+              willChange: "opacity, transform",
+            }
+      }
     >
       {children}
     </div>
