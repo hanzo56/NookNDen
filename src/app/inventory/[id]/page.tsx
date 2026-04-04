@@ -21,6 +21,7 @@ import {
   Upload,
   FileText,
   ExternalLink,
+  Pencil,
 } from "lucide-react";
 import Footer from "@/components/Footer";
 import type { InventoryItem, Room } from "@/lib/types";
@@ -511,22 +512,27 @@ export default function ItemDetailPage() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {!editing && (
               <button
                 onClick={() => setEditing(true)}
-                className="flex items-center gap-2 bg-white border border-[#e2e8f0] text-[#314158] font-semibold text-sm px-4 py-2.5 rounded-xl hover:bg-[#f1f5f9] transition-colors cursor-pointer"
+                className="size-9 flex items-center justify-center bg-white border border-[#e2e8f0] text-[#314158] rounded-lg hover:bg-[#f1f5f9] transition-colors cursor-pointer"
+                title="Edit"
               >
-                Edit
+                <Pencil className="size-4" />
               </button>
             )}
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="flex items-center gap-2 bg-white border border-red-200 text-red-600 font-semibold text-sm px-4 py-2.5 rounded-xl hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
+              className="size-9 flex items-center justify-center bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
+              title="Delete"
             >
-              <Trash2 className="size-4" />
-              {deleting ? "Deleting..." : "Delete"}
+              {deleting ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Trash2 className="size-4" />
+              )}
             </button>
           </div>
         </div>
