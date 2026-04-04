@@ -22,6 +22,8 @@ import {
   FileText,
   ExternalLink,
   Pencil,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import Footer from "@/components/Footer";
 import type { InventoryItem, Room } from "@/lib/types";
@@ -73,6 +75,7 @@ export default function ItemDetailPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [activePhoto, setActivePhoto] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
@@ -567,7 +570,10 @@ export default function ItemDetailPage() {
 
               {hasPhotos ? (
                 <div className="flex flex-col gap-4">
-                  <div className="group relative aspect-[4/3] rounded-xl overflow-hidden">
+                  <div
+                    className="group relative aspect-[4/3] rounded-xl overflow-hidden cursor-pointer"
+                    onClick={() => setLightboxOpen(true)}
+                  >
                     <Image
                       src={photos[activePhoto]}
                       alt={`${item.name} photo ${activePhoto + 1}`}
@@ -1078,6 +1084,65 @@ export default function ItemDetailPage() {
           </div>
         </div>
       </div>
+
+      {lightboxOpen && hasPhotos && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
+          onClick={() => setLightboxOpen(false)}
+        >
+          <button
+            onClick={() => setLightboxOpen(false)}
+            className="absolute top-4 right-4 size-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer z-10"
+          >
+            <X className="size-6 text-white" />
+          </button>
+
+          {photos.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActivePhoto((prev) =>
+                    prev === 0 ? photos.length - 1 : prev - 1
+                  );
+                }}
+                className="absolute left-4 size-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer z-10"
+              >
+                <ChevronLeft className="size-6 text-white" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActivePhoto((prev) =>
+                    prev === photos.length - 1 ? 0 : prev + 1
+                  );
+                }}
+                className="absolute right-4 size-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer z-10"
+              >
+                <ChevronRight className="size-6 text-white" />
+              </button>
+            </>
+          )}
+
+          <div
+            className="relative w-[90vw] h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={photos[activePhoto]}
+              alt={`${item.name} photo ${activePhoto + 1}`}
+              fill
+              className="object-contain"
+            />
+          </div>
+
+          {photos.length > 1 && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm font-medium px-4 py-2 rounded-full">
+              {activePhoto + 1} / {photos.length}
+            </div>
+          )}
+        </div>
+      )}
 
       <Footer />
     </div>
