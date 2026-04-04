@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
         warranty_expiry: body.warranty_expiry || null,
         support_contact: body.support_contact || null,
         photos: body.photos || [],
+        documents: body.documents || [],
         notes: body.notes || null,
       })
       .select()

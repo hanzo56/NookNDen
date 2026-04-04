@@ -31,22 +31,24 @@ export async function POST(request: NextRequest) {
       "image/gif",
       "image/heic",
       "image/heif",
+      "application/pdf",
     ];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: "Invalid file type. Please upload an image." },
+        { error: "Invalid file type. Please upload an image or PDF." },
         { status: 400 }
       );
     }
 
     const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const bucket = file.type === "application/pdf" ? "documents" : "photos";
     const fileName = `${session.user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = new Uint8Array(arrayBuffer);
 
     const { error: uploadError } = await supabase.storage
-      .from("photos")
+      .from(bucket)
       .upload(fileName, buffer, {
         contentType: file.type,
         upsert: false,
@@ -62,9 +64,9 @@ export async function POST(request: NextRequest) {
 
     const {
       data: { publicUrl },
-    } = supabase.storage.from("photos").getPublicUrl(fileName);
+    } = supabase.storage.from(bucket).getPublicUrl(fileName);
 
-    return NextResponse.json({ url: publicUrl });
+    return NextResponse.json({ url: publicUrl, fileName: file.name });
   } catch (err) {
     console.error("Upload handler error:", err);
     return NextResponse.json(
