@@ -19,6 +19,8 @@ import {
   Search,
   X,
   Upload,
+  FileText,
+  ExternalLink,
 } from "lucide-react";
 import Footer from "@/components/Footer";
 import type { InventoryItem, Room } from "@/lib/types";
@@ -87,9 +89,14 @@ export default function ItemDetailPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
 
+  const [documents, setDocuments] = useState<string[]>([]);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [docUploadError, setDocUploadError] = useState("");
+
   const roomInputRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const docInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -161,6 +168,7 @@ export default function ItemDetailPage() {
     setSupportContact(itm.support_contact || "");
     setNotes(itm.notes || "");
     setPhotos(itm.photos || []);
+    setDocuments(itm.documents || []);
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -186,6 +194,7 @@ export default function ItemDetailPage() {
           support_contact: supportContact.trim() || null,
           notes: notes.trim() || null,
           photos,
+          documents,
         }),
       });
 
@@ -276,6 +285,7 @@ export default function ItemDetailPage() {
           support_contact: supportContact || item?.support_contact || null,
           notes: notes || item?.notes || null,
           photos: newPhotos,
+          documents,
         }),
       });
       if (res.ok) {
@@ -315,6 +325,105 @@ export default function ItemDetailPage() {
           support_contact: supportContact || item?.support_contact || null,
           notes: notes || item?.notes || null,
           photos: newPhotos,
+          documents,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setItem(data.item);
+      }
+    } catch {
+      // Will persist on next save
+    }
+  }
+
+  async function handleDocUpload(files: FileList | null) {
+    if (!files || files.length === 0) return;
+
+    setUploadingDoc(true);
+    setDocUploadError("");
+
+    const newDocs = [...documents];
+
+    for (let i = 0; i < files.length; i++) {
+      const formData = new FormData();
+      formData.append("file", files[i]);
+
+      try {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          setDocUploadError(data.error || "Failed to upload document");
+          continue;
+        }
+
+        const data = await res.json();
+        newDocs.push(data.url);
+      } catch {
+        setDocUploadError("Failed to upload document");
+      }
+    }
+
+    setDocuments(newDocs);
+
+    try {
+      const res = await fetch(`/api/inventory/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name || item?.name,
+          category: category || item?.category,
+          manufacturer: manufacturer || item?.manufacturer || null,
+          model: model || item?.model || null,
+          serial_number: serialNumber || item?.serial_number || null,
+          location: selectedRoom?.name || item?.location || null,
+          room_id: selectedRoom?.id || item?.room_id || null,
+          purchase_date: purchaseDate || item?.purchase_date || null,
+          warranty_expiry: warrantyExpiry || item?.warranty_expiry || null,
+          support_contact: supportContact || item?.support_contact || null,
+          notes: notes || item?.notes || null,
+          photos,
+          documents: newDocs,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setItem(data.item);
+      }
+    } catch {
+      // Will persist on next save
+    }
+
+    setUploadingDoc(false);
+    if (docInputRef.current) docInputRef.current.value = "";
+  }
+
+  async function handleDeleteDoc(index: number) {
+    const newDocs = documents.filter((_, i) => i !== index);
+    setDocuments(newDocs);
+
+    try {
+      const res = await fetch(`/api/inventory/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name || item?.name,
+          category: category || item?.category,
+          manufacturer: manufacturer || item?.manufacturer || null,
+          model: model || item?.model || null,
+          serial_number: serialNumber || item?.serial_number || null,
+          location: selectedRoom?.name || item?.location || null,
+          room_id: selectedRoom?.id || item?.room_id || null,
+          purchase_date: purchaseDate || item?.purchase_date || null,
+          warranty_expiry: warrantyExpiry || item?.warranty_expiry || null,
+          support_contact: supportContact || item?.support_contact || null,
+          notes: notes || item?.notes || null,
+          photos,
+          documents: newDocs,
         }),
       });
       if (res.ok) {
@@ -839,6 +948,118 @@ export default function ItemDetailPage() {
                 )}
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Receipts & Invoices */}
+        <div className="mt-8 bg-white border border-[#e2e8f0] rounded-2xl overflow-hidden shadow-xl">
+          <div className="bg-gradient-to-r from-[#007a55] to-[#016630] px-6 py-4">
+            <div className="flex items-center gap-2">
+              <FileText className="size-5 text-white" />
+              <h2 className="text-xl font-bold text-white">
+                Receipts & Invoices
+              </h2>
+            </div>
+          </div>
+          <div className="p-6 flex flex-col gap-4">
+            {docUploadError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                {docUploadError}
+              </div>
+            )}
+
+            {documents.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                {documents.map((doc, i) => {
+                  const fileName = decodeURIComponent(
+                    doc.split("/").pop() || "Document"
+                  );
+                  const isPdf = doc.toLowerCase().endsWith(".pdf");
+
+                  return (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-3"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div
+                          className={`size-10 rounded-lg flex items-center justify-center shrink-0 ${
+                            isPdf
+                              ? "bg-red-100 text-red-600"
+                              : "bg-blue-100 text-blue-600"
+                          }`}
+                        >
+                          <FileText className="size-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-[#0f172b] truncate">
+                            {fileName}
+                          </p>
+                          <p className="text-xs text-[#45556c]">
+                            {isPdf ? "PDF Document" : "Image"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <a
+                          href={doc}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="size-8 rounded-lg bg-[#e2e8f0] flex items-center justify-center hover:bg-[#cbd5e1] transition-colors"
+                        >
+                          <ExternalLink className="size-4 text-[#314158]" />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteDoc(i)}
+                          className="size-8 rounded-lg bg-[#e2e8f0] flex items-center justify-center hover:bg-red-100 hover:text-red-600 transition-colors cursor-pointer text-[#314158]"
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-[#cad5e2] rounded-xl py-10 flex flex-col items-center justify-center gap-3">
+                <div className="size-12 rounded-full bg-[#f1f5f9] flex items-center justify-center">
+                  <FileText className="size-6 text-[#90a1b9]" />
+                </div>
+                <p className="text-base text-[#45556c]">
+                  No receipts or invoices yet
+                </p>
+                <p className="text-sm text-[#62748e]">
+                  Upload PDFs or photos of your receipts
+                </p>
+              </div>
+            )}
+
+            {uploadingDoc && (
+              <div className="flex items-center justify-center gap-2 py-3 text-[#007a55]">
+                <Loader2 className="size-5 animate-spin" />
+                <span className="text-sm font-medium">Uploading...</span>
+              </div>
+            )}
+
+            <input
+              ref={docInputRef}
+              type="file"
+              accept="image/*,application/pdf"
+              multiple
+              className="hidden"
+              onChange={(e) => handleDocUpload(e.target.files)}
+            />
+
+            <button
+              type="button"
+              disabled={uploadingDoc}
+              onClick={() => docInputRef.current?.click()}
+              className="bg-[#009966] text-white font-medium text-sm py-3 rounded-xl shadow-md hover:bg-[#007a55] transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <Upload className="size-4" />
+              Upload Receipt / Invoice
+            </button>
           </div>
         </div>
       </div>

@@ -24,6 +24,7 @@ export interface InventoryItem {
   warranty_expiry: string | null;
   support_contact: string | null;
   photos: string[];
+  documents: string[];
   notes: string | null;
   created_at: string;
   updated_at: string;

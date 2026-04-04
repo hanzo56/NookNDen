@@ -65,6 +65,7 @@ export async function PUT(
         warranty_expiry: body.warranty_expiry || null,
         support_contact: body.support_contact || null,
         photos: body.photos,
+        documents: body.documents,
         notes: body.notes || null,
         updated_at: new Date().toISOString(),
       })
