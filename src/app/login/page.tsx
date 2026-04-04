@@ -41,7 +41,7 @@ function LoginContent() {
         setError("Invalid email or password. Please try again.");
         setLoading(false);
       } else {
-        router.push("/");
+        router.push("/inventory");
         router.refresh();
       }
     } catch {

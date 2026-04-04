@@ -1,7 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
 import {
-  ArrowRight,
   ClipboardList,
   Camera,
   Hash,
@@ -14,6 +12,7 @@ import {
 } from "lucide-react";
 import Footer from "@/components/Footer";
 import AuthButton from "@/components/AuthButton";
+import HeroButtons from "@/components/HeroButtons";
 import RoomShowcase from "@/components/RoomShowcase";
 import AssetTracking from "@/components/AssetTracking";
 import {
@@ -83,7 +82,7 @@ export default function LandingPage() {
       <section className="relative min-h-[700px] lg:min-h-[820px] flex flex-col items-center justify-center text-center px-6 py-24 lg:py-32 overflow-hidden">
         <ParallaxBackground>
           <Image src={HERO_BG} alt="" fill priority className="object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-br from-[rgba(154,52,0,.85)] via-[rgba(194,80,0,.75)] to-[rgba(180,83,9,.85)]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[rgba(0,79,59,.85)] via-[rgba(1,102,48,.75)] to-[rgba(11,79,74,.85)]" />
         </ParallaxBackground>
 
         <AuthButton />
@@ -103,24 +102,18 @@ export default function LandingPage() {
             Nook n&apos; Den
           </h1>
 
-          <p className="text-xl md:text-2xl text-[#fed7aa] font-normal">
+          <p className="text-xl md:text-2xl text-[#a7f3d0] font-normal">
             Your Home&apos;s Digital DNA
           </p>
 
-          <p className="text-base md:text-lg text-[#fdba74] max-w-xl leading-relaxed">
+          <p className="text-base md:text-lg text-[#6ee7b7] max-w-xl leading-relaxed">
             A comprehensive platform to track every detail of your
             residence&mdash;from structural data and appliance warranties to
             maintenance history and aesthetic elements. Empower yourself to
             maintain your property&apos;s value and efficiency.
           </p>
 
-          <Link
-            href="/register"
-            className="mt-4 inline-flex items-center gap-2 bg-yellow-400 text-black border-2 border-black font-semibold text-lg px-8 py-4 rounded-2xl shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-200"
-          >
-            Get Started
-            <ArrowRight className="size-5" />
-          </Link>
+          <HeroButtons />
         </HeroContent>
 
         <HeroContent className="relative z-10 mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl">
@@ -136,7 +129,7 @@ export default function LandingPage() {
               <p className="text-3xl lg:text-4xl font-bold text-white tracking-wide">
                 {stat.value}
               </p>
-              <p className="text-base text-[#ffedd5] mt-1">{stat.label}</p>
+              <p className="text-base text-[#d1fae5] mt-1">{stat.label}</p>
             </div>
           ))}
         </HeroContent>
