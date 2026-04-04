@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
@@ -9,9 +9,14 @@ import {
   Camera,
   Loader2,
   Save,
+  Upload,
+  Trash2,
+  ImagePlus,
 } from "lucide-react";
+import Image from "next/image";
 import Footer from "@/components/Footer";
 import type { Room } from "@/lib/types";
+import { compressImage } from "@/lib/image-utils";
 
 const ROOM_TYPES = [
   "Kitchen",
@@ -41,6 +46,11 @@ export default function RoomDetailPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [roomType, setRoomType] = useState("Other");
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -69,6 +79,7 @@ export default function RoomDetailPage() {
       setName(data.room.name);
       setDescription(data.room.description || "");
       setRoomType(data.room.room_type || "Other");
+      setPhotos(data.room.photos || []);
     } catch {
       setError("Failed to load room");
     } finally {
@@ -95,6 +106,7 @@ export default function RoomDetailPage() {
           name: name.trim(),
           description: description.trim() || null,
           room_type: roomType,
+          photos,
         }),
       });
 
@@ -112,6 +124,76 @@ export default function RoomDetailPage() {
       setError("Something went wrong");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleFileUpload(files: FileList | null) {
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    setUploadError("");
+
+    const newPhotos = [...photos];
+
+    for (let i = 0; i < files.length; i++) {
+      try {
+        const compressed = await compressImage(files[i]);
+        const formData = new FormData();
+        formData.append("file", compressed);
+
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          setUploadError(data.error || "Failed to upload photo");
+          continue;
+        }
+
+        const data = await res.json();
+        newPhotos.push(data.url);
+      } catch {
+        setUploadError("Failed to upload photo");
+      }
+    }
+
+    setPhotos(newPhotos);
+
+    // Persist to DB
+    try {
+      await fetch(`/api/rooms/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, description, room_type: roomType, photos: newPhotos }),
+      });
+    } catch {
+      // Photos saved locally, will persist on next save
+    }
+
+    setUploading(false);
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
+  }
+
+  async function handleDeletePhoto(index: number) {
+    const newPhotos = photos.filter((_, i) => i !== index);
+    setPhotos(newPhotos);
+
+    try {
+      const res = await fetch(`/api/rooms/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, description, room_type: roomType, photos: newPhotos }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRoom(data.room);
+      }
+    } catch {
+      // Will persist on next save
     }
   }
 
@@ -180,18 +262,29 @@ export default function RoomDetailPage() {
               </div>
             </div>
             <div className="p-6 flex flex-col gap-4">
-              {room.photos && room.photos.length > 0 ? (
+              {uploadError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                  {uploadError}
+                </div>
+              )}
+
+              {photos.length > 0 ? (
                 <div className="grid grid-cols-2 gap-3">
-                  {room.photos.map((photo, i) => (
-                    <div
-                      key={i}
-                      className="aspect-square rounded-xl overflow-hidden bg-[#f1f5f9]"
-                    >
-                      <img
+                  {photos.map((photo, i) => (
+                    <div key={i} className="group relative aspect-square rounded-xl overflow-hidden bg-[#f1f5f9]">
+                      <Image
                         src={photo}
                         alt={`${room.name} photo ${i + 1}`}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
                       />
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePhoto(i)}
+                        className="absolute top-2 right-2 size-8 rounded-lg bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-red-600"
+                      >
+                        <Trash2 className="size-4 text-white" />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -206,13 +299,51 @@ export default function RoomDetailPage() {
                   </p>
                 </div>
               )}
-              <button
-                type="button"
-                className="w-full bg-[#009966] text-white font-medium text-base py-3 rounded-xl shadow-md hover:bg-[#007a55] transition-colors flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Camera className="size-5" />
-                Upload Photos
-              </button>
+
+              {uploading && (
+                <div className="flex items-center justify-center gap-2 py-3 text-[#007a55]">
+                  <Loader2 className="size-5 animate-spin" />
+                  <span className="text-sm font-medium">Uploading...</span>
+                </div>
+              )}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => handleFileUpload(e.target.files)}
+              />
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => handleFileUpload(e.target.files)}
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  disabled={uploading}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="bg-[#009966] text-white font-medium text-sm py-3 rounded-xl shadow-md hover:bg-[#007a55] transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <Upload className="size-4" />
+                  Upload Photos
+                </button>
+                <button
+                  type="button"
+                  disabled={uploading}
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="bg-[#0f172b] text-white font-medium text-sm py-3 rounded-xl shadow-md hover:bg-[#1e293b] transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <Camera className="size-4" />
+                  Take Photo
+                </button>
+              </div>
             </div>
           </div>
 
@@ -267,7 +398,7 @@ export default function RoomDetailPage() {
                       Total Photos
                     </p>
                     <p className="text-3xl font-bold text-[#004f3b] mt-1">
-                      {room.photos?.length ?? 0}
+                      {photos.length}
                     </p>
                   </div>
                   <div className="bg-[#eff6ff] border-2 border-[#bedbff] rounded-xl px-5 py-4">

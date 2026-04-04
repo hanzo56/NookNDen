@@ -131,9 +131,21 @@ export default function ItemCard({ item }: { item: InventoryItem }) {
             <div className="flex items-center gap-2">
               <MapPin className="size-4 text-[#45556c] shrink-0" />
               <span className="text-sm text-[#45556c]">Location:</span>
-              <span className="text-sm font-medium text-[#009966]">
-                {item.location}
-              </span>
+              {item.room_id ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/inventory/rooms/${item.room_id}`);
+                  }}
+                  className="text-sm font-medium text-[#009966] underline decoration-[#009966]/30 hover:decoration-[#009966] transition-colors cursor-pointer"
+                >
+                  {item.location}
+                </button>
+              ) : (
+                <span className="text-sm font-medium text-[#009966]">
+                  {item.location}
+                </span>
+              )}
             </div>
           )}
           {item.serial_number && (

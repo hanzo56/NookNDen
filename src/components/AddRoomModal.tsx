@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { X, Loader2, Plus, Camera, MapPin } from "lucide-react";
+import { useState, useRef } from "react";
+import { X, Loader2, Plus, Camera, MapPin, Upload, Trash2 } from "lucide-react";
+import Image from "next/image";
+import { compressImage } from "@/lib/image-utils";
 
 const ROOM_TYPES = [
   "Kitchen",
@@ -30,6 +32,50 @@ export default function AddRoomModal({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [roomType, setRoomType] = useState("Other");
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleFileUpload(files: FileList | null) {
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    setUploadError("");
+
+    const newPhotos = [...photos];
+
+    for (let i = 0; i < files.length; i++) {
+      try {
+        const compressed = await compressImage(files[i]);
+        const formData = new FormData();
+        formData.append("file", compressed);
+
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          setUploadError(data.error || "Failed to upload photo");
+          continue;
+        }
+
+        const data = await res.json();
+        newPhotos.push(data.url);
+      } catch {
+        setUploadError("Failed to upload photo");
+      }
+    }
+
+    setPhotos(newPhotos);
+    setUploading(false);
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,7 +95,7 @@ export default function AddRoomModal({
           name: name.trim(),
           description: description.trim() || null,
           room_type: roomType,
-          photos: [],
+          photos,
         }),
       });
 
@@ -144,15 +190,90 @@ export default function AddRoomModal({
             </div>
           </div>
 
-          {/* Photo Upload Placeholder */}
-          <div className="border-2 border-dashed border-[#cad5e2] rounded-xl p-8 flex flex-col items-center justify-center gap-3">
-            <div className="size-12 rounded-full bg-[#f1f5f9] flex items-center justify-center">
-              <Camera className="size-6 text-[#90a1b9]" />
+          {/* Photo Upload */}
+          <div className="flex flex-col gap-3">
+            {uploadError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                {uploadError}
+              </div>
+            )}
+
+            {photos.length > 0 ? (
+              <div className="grid grid-cols-3 gap-3">
+                {photos.map((photo, i) => (
+                  <div key={i} className="group relative aspect-square rounded-xl overflow-hidden bg-[#f1f5f9]">
+                    <Image
+                      src={photo}
+                      alt={`Room photo ${i + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setPhotos(photos.filter((_, j) => j !== i))}
+                      className="absolute top-1.5 right-1.5 size-7 rounded-lg bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-red-600"
+                    >
+                      <Trash2 className="size-3.5 text-white" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-[#cad5e2] rounded-xl p-8 flex flex-col items-center justify-center gap-3">
+                <div className="size-12 rounded-full bg-[#f1f5f9] flex items-center justify-center">
+                  <Camera className="size-6 text-[#90a1b9]" />
+                </div>
+                <p className="text-base text-[#45556c]">No photos yet</p>
+                <p className="text-sm text-[#62748e]">
+                  Upload photos to get started
+                </p>
+              </div>
+            )}
+
+            {uploading && (
+              <div className="flex items-center justify-center gap-2 py-2 text-[#007a55]">
+                <Loader2 className="size-5 animate-spin" />
+                <span className="text-sm font-medium">Uploading...</span>
+              </div>
+            )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => handleFileUpload(e.target.files)}
+            />
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => handleFileUpload(e.target.files)}
+            />
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={() => fileInputRef.current?.click()}
+                className="bg-[#f1f5f9] text-[#314158] font-medium text-sm py-3 rounded-xl hover:bg-[#e2e8f0] transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Upload className="size-4" />
+                Upload Photos
+              </button>
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={() => cameraInputRef.current?.click()}
+                className="bg-[#f1f5f9] text-[#314158] font-medium text-sm py-3 rounded-xl hover:bg-[#e2e8f0] transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Camera className="size-4" />
+                Take Photo
+              </button>
             </div>
-            <p className="text-base text-[#45556c]">No photos yet</p>
-            <p className="text-sm text-[#62748e]">
-              Upload photos to get started
-            </p>
           </div>
 
           {/* Photo Tips */}

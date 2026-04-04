@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
   Home,
@@ -12,6 +12,7 @@ import {
   Package,
   X,
   MapPin,
+  LogOut,
 } from "lucide-react";
 import ItemCard from "@/components/ItemCard";
 import AddItemModal from "@/components/AddItemModal";
@@ -30,6 +31,21 @@ export default function InventoryPage() {
   const [activeCategory, setActiveCategory] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddRoomModal, setShowAddRoomModal] = useState(false);
+  const [showAvatarMenu, setShowAvatarMenu] = useState(false);
+  const avatarMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        avatarMenuRef.current &&
+        !avatarMenuRef.current.contains(e.target as Node)
+      ) {
+        setShowAvatarMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -101,9 +117,12 @@ export default function InventoryPage() {
       <header className="bg-gradient-to-r from-[#006045] to-[#0d542b] px-6 lg:px-16 pt-8 pb-24">
         <div className="max-w-[1280px] mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="size-10 rounded-[10px] bg-white/10 flex items-center justify-center">
+            <button
+              onClick={() => router.push("/")}
+              className="size-10 rounded-[10px] bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer"
+            >
               <Home className="size-6 text-white" strokeWidth={1.5} />
-            </div>
+            </button>
             <div>
               <h1 className="text-[28px] font-bold text-white tracking-tight leading-tight">
                 Home Inventory
@@ -129,8 +148,34 @@ export default function InventoryPage() {
               Add Item
             </button>
             {session?.user?.name && (
-              <div className="size-12 rounded-full bg-white border-2 border-white shadow-lg flex items-center justify-center text-[#006045] font-bold text-lg">
-                {session.user.name.charAt(0).toUpperCase()}
+              <div className="relative" ref={avatarMenuRef}>
+                <button
+                  onClick={() => setShowAvatarMenu((v) => !v)}
+                  className="size-12 rounded-full bg-white border-2 border-white shadow-lg flex items-center justify-center text-[#006045] font-bold text-lg cursor-pointer hover:ring-2 hover:ring-white/50 transition-all"
+                >
+                  {session.user.name.charAt(0).toUpperCase()}
+                </button>
+                {showAvatarMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {session.user.name}
+                      </p>
+                      {session.user.email && (
+                        <p className="text-xs text-gray-500 truncate">
+                          {session.user.email}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                    >
+                      <LogOut className="size-4" />
+                      Log Out
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

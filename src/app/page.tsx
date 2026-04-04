@@ -1,7 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
 import {
-  ArrowRight,
   ClipboardList,
   Camera,
   Hash,
@@ -14,6 +12,7 @@ import {
 } from "lucide-react";
 import Footer from "@/components/Footer";
 import AuthButton from "@/components/AuthButton";
+import HeroButtons from "@/components/HeroButtons";
 import RoomShowcase from "@/components/RoomShowcase";
 import AssetTracking from "@/components/AssetTracking";
 import {
@@ -114,13 +113,7 @@ export default function LandingPage() {
             maintain your property&apos;s value and efficiency.
           </p>
 
-          <Link
-            href="/register"
-            className="mt-4 inline-flex items-center gap-2 bg-yellow-400 text-black border-2 border-black font-semibold text-lg px-8 py-4 rounded-2xl shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-200"
-          >
-            Get Started
-            <ArrowRight className="size-5" />
-          </Link>
+          <HeroButtons />
         </HeroContent>
 
         <HeroContent className="relative z-10 mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl">
