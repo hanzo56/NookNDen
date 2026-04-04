@@ -899,9 +899,18 @@ export default function ItemDetailPage() {
                   <div className="flex items-center gap-3">
                     <MapPin className="size-5 text-[#009966] shrink-0" />
                     <span className="text-sm text-[#45556c]">Location:</span>
-                    <span className="text-sm font-medium text-[#009966]">
-                      {item.location}
-                    </span>
+                    {item.room_id ? (
+                      <button
+                        onClick={() => router.push(`/inventory/rooms/${item.room_id}`)}
+                        className="text-sm font-medium text-[#009966] underline decoration-[#009966]/30 hover:decoration-[#009966] transition-colors cursor-pointer"
+                      >
+                        {item.location}
+                      </button>
+                    ) : (
+                      <span className="text-sm font-medium text-[#009966]">
+                        {item.location}
+                      </span>
+                    )}
                   </div>
                 )}
                 {item.serial_number && (
