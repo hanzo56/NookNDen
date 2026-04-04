@@ -105,12 +105,12 @@ export default function AddItemModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center overflow-y-auto p-4 pt-8 sm:pt-4">
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg my-auto">
         <div className="sticky top-0 z-10 bg-gradient-to-r from-[#006045] to-[#0d542b] rounded-t-2xl px-6 py-5 flex items-center justify-between">
           <h2 className="text-xl font-bold text-white">Add New Item</h2>
           <button
