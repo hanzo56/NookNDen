@@ -110,8 +110,8 @@ export default function AddItemModal({
         className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg my-auto">
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-[#006045] to-[#0d542b] rounded-t-2xl px-6 py-5 flex items-center justify-between">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg my-auto flex flex-col max-h-[90vh]">
+        <div className="shrink-0 bg-gradient-to-r from-[#006045] to-[#0d542b] rounded-t-2xl px-6 py-5 flex items-center justify-between">
           <h2 className="text-xl font-bold text-white">Add New Item</h2>
           <button
             onClick={onClose}
@@ -121,7 +121,7 @@ export default function AddItemModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4 overflow-y-auto">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
               {error}
