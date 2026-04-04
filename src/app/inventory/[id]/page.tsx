@@ -18,9 +18,11 @@ import {
   Package,
   Search,
   X,
+  Upload,
 } from "lucide-react";
 import Footer from "@/components/Footer";
 import type { InventoryItem, Room } from "@/lib/types";
+import { compressImage } from "@/lib/image-utils";
 
 const CATEGORIES = [
   "HVAC",
@@ -81,8 +83,13 @@ export default function ItemDetailPage() {
   const [warrantyExpiry, setWarrantyExpiry] = useState("");
   const [supportContact, setSupportContact] = useState("");
   const [notes, setNotes] = useState("");
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   const roomInputRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -153,6 +160,7 @@ export default function ItemDetailPage() {
     setWarrantyExpiry(itm.warranty_expiry || "");
     setSupportContact(itm.support_contact || "");
     setNotes(itm.notes || "");
+    setPhotos(itm.photos || []);
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -177,7 +185,7 @@ export default function ItemDetailPage() {
           warranty_expiry: warrantyExpiry || null,
           support_contact: supportContact.trim() || null,
           notes: notes.trim() || null,
-          photos: item?.photos || [],
+          photos,
         }),
       });
 
@@ -217,6 +225,107 @@ export default function ItemDetailPage() {
     }
   }
 
+  async function handleFileUpload(files: FileList | null) {
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    setUploadError("");
+
+    const newPhotos = [...photos];
+
+    for (let i = 0; i < files.length; i++) {
+      try {
+        const compressed = await compressImage(files[i]);
+        const formData = new FormData();
+        formData.append("file", compressed);
+
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          setUploadError(data.error || "Failed to upload photo");
+          continue;
+        }
+
+        const data = await res.json();
+        newPhotos.push(data.url);
+      } catch {
+        setUploadError("Failed to upload photo");
+      }
+    }
+
+    setPhotos(newPhotos);
+
+    try {
+      const res = await fetch(`/api/inventory/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name || item?.name,
+          category: category || item?.category,
+          manufacturer: manufacturer || item?.manufacturer || null,
+          model: model || item?.model || null,
+          serial_number: serialNumber || item?.serial_number || null,
+          location: selectedRoom?.name || item?.location || null,
+          room_id: selectedRoom?.id || item?.room_id || null,
+          purchase_date: purchaseDate || item?.purchase_date || null,
+          warranty_expiry: warrantyExpiry || item?.warranty_expiry || null,
+          support_contact: supportContact || item?.support_contact || null,
+          notes: notes || item?.notes || null,
+          photos: newPhotos,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setItem(data.item);
+      }
+    } catch {
+      // Will persist on next save
+    }
+
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
+  }
+
+  async function handleDeletePhoto(index: number) {
+    const newPhotos = photos.filter((_, i) => i !== index);
+    setPhotos(newPhotos);
+    if (activePhoto >= newPhotos.length) {
+      setActivePhoto(Math.max(0, newPhotos.length - 1));
+    }
+
+    try {
+      const res = await fetch(`/api/inventory/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name || item?.name,
+          category: category || item?.category,
+          manufacturer: manufacturer || item?.manufacturer || null,
+          model: model || item?.model || null,
+          serial_number: serialNumber || item?.serial_number || null,
+          location: selectedRoom?.name || item?.location || null,
+          room_id: selectedRoom?.id || item?.room_id || null,
+          purchase_date: purchaseDate || item?.purchase_date || null,
+          warranty_expiry: warrantyExpiry || item?.warranty_expiry || null,
+          support_contact: supportContact || item?.support_contact || null,
+          notes: notes || item?.notes || null,
+          photos: newPhotos,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setItem(data.item);
+      }
+    } catch {
+      // Will persist on next save
+    }
+  }
+
   if (status === "loading" || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#f8fafc]">
@@ -242,7 +351,7 @@ export default function ItemDetailPage() {
   const categoryStyle =
     CATEGORY_STYLES[item.category] ?? CATEGORY_STYLES.Uncategorized;
   const warrantyExpired = isWarrantyExpired(item.warranty_expiry);
-  const hasPhotos = item.photos && item.photos.length > 0;
+  const hasPhotos = photos.length > 0;
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9]">
@@ -334,25 +443,38 @@ export default function ItemDetailPage() {
                 <h2 className="text-xl font-bold text-white">Photos</h2>
               </div>
             </div>
-            <div className="p-6">
+            <div className="p-6 flex flex-col gap-4">
+              {uploadError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                  {uploadError}
+                </div>
+              )}
+
               {hasPhotos ? (
                 <div className="flex flex-col gap-4">
-                  <div className="relative aspect-[4/3] rounded-xl overflow-hidden">
+                  <div className="group relative aspect-[4/3] rounded-xl overflow-hidden">
                     <Image
-                      src={item.photos[activePhoto]}
+                      src={photos[activePhoto]}
                       alt={`${item.name} photo ${activePhoto + 1}`}
                       fill
                       className="object-cover"
                     />
-                    {item.photos.length > 1 && (
+                    {photos.length > 1 && (
                       <div className="absolute bottom-3 right-3 bg-[rgba(15,23,43,0.75)] text-white text-xs font-medium px-3 py-1 rounded-full">
-                        {activePhoto + 1} / {item.photos.length}
+                        {activePhoto + 1} / {photos.length}
                       </div>
                     )}
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePhoto(activePhoto)}
+                      className="absolute top-3 right-3 size-9 rounded-lg bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-red-600"
+                    >
+                      <Trash2 className="size-4 text-white" />
+                    </button>
                   </div>
-                  {item.photos.length > 1 && (
+                  {photos.length > 1 && (
                     <div className="flex gap-2 overflow-x-auto">
-                      {item.photos.map((photo, i) => (
+                      {photos.map((photo, i) => (
                         <button
                           key={i}
                           onClick={() => setActivePhoto(i)}
@@ -380,8 +502,56 @@ export default function ItemDetailPage() {
                     <Camera className="size-6 text-[#90a1b9]" />
                   </div>
                   <p className="text-base text-[#45556c]">No photos yet</p>
+                  <p className="text-sm text-[#62748e]">
+                    Upload photos to get started
+                  </p>
                 </div>
               )}
+
+              {uploading && (
+                <div className="flex items-center justify-center gap-2 py-3 text-[#007a55]">
+                  <Loader2 className="size-5 animate-spin" />
+                  <span className="text-sm font-medium">Uploading...</span>
+                </div>
+              )}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => handleFileUpload(e.target.files)}
+              />
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => handleFileUpload(e.target.files)}
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  disabled={uploading}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="bg-[#009966] text-white font-medium text-sm py-3 rounded-xl shadow-md hover:bg-[#007a55] transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <Upload className="size-4" />
+                  Upload Photos
+                </button>
+                <button
+                  type="button"
+                  disabled={uploading}
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="bg-[#0f172b] text-white font-medium text-sm py-3 rounded-xl shadow-md hover:bg-[#1e293b] transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <Camera className="size-4" />
+                  Take Photo
+                </button>
+              </div>
             </div>
           </div>
 

@@ -134,6 +134,13 @@ export default function InventoryPage() {
           </div>
           <div className="flex items-center gap-3">
             <button
+              onClick={() => router.push("/inventory/rooms")}
+              className="flex items-center gap-2 bg-white/10 border border-white/30 text-white font-semibold text-base px-6 py-3 rounded-xl hover:bg-white/20 transition-all cursor-pointer"
+            >
+              <MapPin className="size-5" />
+              My Rooms
+            </button>
+            <button
               onClick={() => setShowAddRoomModal(true)}
               className="flex items-center gap-2 bg-white/10 border border-white/30 text-white font-semibold text-base px-6 py-3 rounded-xl hover:bg-white/20 transition-all cursor-pointer"
             >
