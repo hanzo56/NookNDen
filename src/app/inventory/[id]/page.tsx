@@ -21,6 +21,9 @@ import {
   Upload,
   FileText,
   ExternalLink,
+  Pencil,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import Footer from "@/components/Footer";
 import type { InventoryItem, Room } from "@/lib/types";
@@ -72,6 +75,7 @@ export default function ItemDetailPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [activePhoto, setActivePhoto] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
@@ -511,22 +515,27 @@ export default function ItemDetailPage() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {!editing && (
               <button
                 onClick={() => setEditing(true)}
-                className="flex items-center gap-2 bg-white border border-[#e2e8f0] text-[#314158] font-semibold text-sm px-4 py-2.5 rounded-xl hover:bg-[#f1f5f9] transition-colors cursor-pointer"
+                className="size-9 flex items-center justify-center bg-white border border-[#e2e8f0] text-[#314158] rounded-lg hover:bg-[#f1f5f9] transition-colors cursor-pointer"
+                title="Edit"
               >
-                Edit
+                <Pencil className="size-4" />
               </button>
             )}
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="flex items-center gap-2 bg-white border border-red-200 text-red-600 font-semibold text-sm px-4 py-2.5 rounded-xl hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
+              className="size-9 flex items-center justify-center bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
+              title="Delete"
             >
-              <Trash2 className="size-4" />
-              {deleting ? "Deleting..." : "Delete"}
+              {deleting ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Trash2 className="size-4" />
+              )}
             </button>
           </div>
         </div>
@@ -561,7 +570,10 @@ export default function ItemDetailPage() {
 
               {hasPhotos ? (
                 <div className="flex flex-col gap-4">
-                  <div className="group relative aspect-[4/3] rounded-xl overflow-hidden">
+                  <div
+                    className="group relative aspect-[4/3] rounded-xl overflow-hidden cursor-pointer"
+                    onClick={() => setLightboxOpen(true)}
+                  >
                     <Image
                       src={photos[activePhoto]}
                       alt={`${item.name} photo ${activePhoto + 1}`}
@@ -703,7 +715,7 @@ export default function ItemDetailPage() {
                     ))}
                   </select>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-semibold text-[#314158]">
                       Manufacturer
@@ -727,7 +739,7 @@ export default function ItemDetailPage() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-semibold text-[#314158]">
                       Serial Number
@@ -816,7 +828,7 @@ export default function ItemDetailPage() {
                     )}
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-semibold text-[#314158]">
                       Purchase Date
@@ -893,9 +905,18 @@ export default function ItemDetailPage() {
                   <div className="flex items-center gap-3">
                     <MapPin className="size-5 text-[#009966] shrink-0" />
                     <span className="text-sm text-[#45556c]">Location:</span>
-                    <span className="text-sm font-medium text-[#009966]">
-                      {item.location}
-                    </span>
+                    {item.room_id ? (
+                      <button
+                        onClick={() => router.push(`/inventory/rooms/${item.room_id}`)}
+                        className="text-sm font-medium text-[#009966] underline decoration-[#009966]/30 hover:decoration-[#009966] transition-colors cursor-pointer"
+                      >
+                        {item.location}
+                      </button>
+                    ) : (
+                      <span className="text-sm font-medium text-[#009966]">
+                        {item.location}
+                      </span>
+                    )}
                   </div>
                 )}
                 {item.serial_number && (
@@ -1063,6 +1084,65 @@ export default function ItemDetailPage() {
           </div>
         </div>
       </div>
+
+      {lightboxOpen && hasPhotos && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
+          onClick={() => setLightboxOpen(false)}
+        >
+          <button
+            onClick={() => setLightboxOpen(false)}
+            className="absolute top-4 right-4 size-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer z-10"
+          >
+            <X className="size-6 text-white" />
+          </button>
+
+          {photos.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActivePhoto((prev) =>
+                    prev === 0 ? photos.length - 1 : prev - 1
+                  );
+                }}
+                className="absolute left-4 size-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer z-10"
+              >
+                <ChevronLeft className="size-6 text-white" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActivePhoto((prev) =>
+                    prev === photos.length - 1 ? 0 : prev + 1
+                  );
+                }}
+                className="absolute right-4 size-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer z-10"
+              >
+                <ChevronRight className="size-6 text-white" />
+              </button>
+            </>
+          )}
+
+          <div
+            className="relative w-[90vw] h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={photos[activePhoto]}
+              alt={`${item.name} photo ${activePhoto + 1}`}
+              fill
+              className="object-contain"
+            />
+          </div>
+
+          {photos.length > 1 && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm font-medium px-4 py-2 rounded-full">
+              {activePhoto + 1} / {photos.length}
+            </div>
+          )}
+        </div>
+      )}
 
       <Footer />
     </div>

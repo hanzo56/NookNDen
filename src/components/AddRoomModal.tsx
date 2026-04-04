@@ -114,12 +114,12 @@ export default function AddRoomModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center overflow-y-auto p-4 pt-8 sm:pt-4">
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl my-auto">
         {/* Header */}
         <div className="sticky top-0 z-10 bg-gradient-to-r from-[#007a55] to-[#016630] rounded-t-2xl px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
