@@ -65,7 +65,7 @@ export default function RegisterPage() {
       if (result?.error) {
         router.push("/login");
       } else {
-        router.push("/");
+        router.push("/inventory");
       }
     } catch {
       setError("Something went wrong. Please try again.");
