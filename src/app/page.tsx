@@ -15,6 +15,7 @@ import AuthButton from "@/components/AuthButton";
 import HeroButtons from "@/components/HeroButtons";
 import RoomShowcase from "@/components/RoomShowcase";
 import AssetTracking from "@/components/AssetTracking";
+import InsuranceClaims from "@/components/InsuranceClaims";
 import {
   ParallaxBackground,
   HeroContent,
@@ -189,6 +190,9 @@ export default function LandingPage() {
       <ScrollReveal>
         <AssetTracking />
       </ScrollReveal>
+
+      <InsuranceClaims />
+
       <Footer />
     </main>
   );
