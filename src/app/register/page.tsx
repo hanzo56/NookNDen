@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { ArrowLeft, Home, HelpCircle, Loader2 } from "lucide-react";
 
@@ -23,13 +22,23 @@ export default function RegisterPage() {
   const [birthYear, setBirthYear] = useState("");
   const [gender, setGender] = useState("");
   const [email, setEmail] = useState("");
+  const [confirmEmail, setConfirmEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const emailsMatch = email === confirmEmail;
+  const showEmailMismatch = confirmEmail.length > 0 && !emailsMatch;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    if (!emailsMatch) {
+      setError("Email addresses do not match. Please check and try again.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -56,17 +65,7 @@ export default function RegisterPage() {
         return;
       }
 
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        router.push("/login");
-      } else {
-        router.push("/inventory");
-      }
+      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch {
       setError("Something went wrong. Please try again.");
       setLoading(false);
@@ -137,6 +136,7 @@ export default function RegisterPage() {
                 <input
                   type="text"
                   placeholder="First name"
+                  required
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   className={inputClass}
@@ -144,6 +144,7 @@ export default function RegisterPage() {
                 <input
                   type="text"
                   placeholder="Last name"
+                  required
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   className={inputClass}
@@ -158,19 +159,19 @@ export default function RegisterPage() {
                 <HelpCircle className="size-4 text-[#90a1b9]" />
               </legend>
               <div className="grid grid-cols-3 gap-4 mt-1">
-                <select value={birthMonth} onChange={(e) => setBirthMonth(e.target.value)} className={selectClass}>
+                <select required value={birthMonth} onChange={(e) => setBirthMonth(e.target.value)} className={selectClass}>
                   <option value="">Month</option>
                   {months.map((m, i) => (
                     <option key={m} value={i + 1}>{m}</option>
                   ))}
                 </select>
-                <select value={birthDay} onChange={(e) => setBirthDay(e.target.value)} className={selectClass}>
+                <select required value={birthDay} onChange={(e) => setBirthDay(e.target.value)} className={selectClass}>
                   <option value="">Day</option>
                   {Array.from({ length: 31 }, (_, i) => (
                     <option key={i + 1} value={i + 1}>{i + 1}</option>
                   ))}
                 </select>
-                <select value={birthYear} onChange={(e) => setBirthYear(e.target.value)} className={selectClass}>
+                <select required value={birthYear} onChange={(e) => setBirthYear(e.target.value)} className={selectClass}>
                   <option value="">Year</option>
                   {years.map((y) => (
                     <option key={y} value={y}>{y}</option>
@@ -185,7 +186,7 @@ export default function RegisterPage() {
                 Gender
                 <HelpCircle className="size-4 text-[#90a1b9]" />
               </label>
-              <select id="gender" value={gender} onChange={(e) => setGender(e.target.value)} className={selectClass}>
+              <select id="gender" required value={gender} onChange={(e) => setGender(e.target.value)} className={selectClass}>
                 <option value="">Select gender</option>
                 <option value="female">Female</option>
                 <option value="male">Male</option>
@@ -198,7 +199,7 @@ export default function RegisterPage() {
             {/* Email */}
             <div className="flex flex-col gap-2">
               <label htmlFor="email" className="text-sm font-semibold text-[#314158]">
-                Mobile number or email
+                Email address
               </label>
               <input
                 id="email"
@@ -212,6 +213,27 @@ export default function RegisterPage() {
               <p className="text-xs text-[#62748e]">
                 You may receive notifications from us.
               </p>
+            </div>
+
+            {/* Confirm Email */}
+            <div className="flex flex-col gap-2">
+              <label htmlFor="confirm-email" className="text-sm font-semibold text-[#314158]">
+                Confirm email address
+              </label>
+              <input
+                id="confirm-email"
+                type="email"
+                placeholder="Confirm email address"
+                required
+                value={confirmEmail}
+                onChange={(e) => setConfirmEmail(e.target.value)}
+                className={`${inputClass} ${showEmailMismatch ? "border-red-400 focus:border-red-500" : ""}`}
+              />
+              {showEmailMismatch && (
+                <p className="text-xs text-red-600">
+                  Email addresses do not match.
+                </p>
+              )}
             </div>
 
             {/* Password */}
@@ -258,7 +280,7 @@ export default function RegisterPage() {
             <div className="flex flex-col gap-3 pt-2">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || showEmailMismatch || !confirmEmail}
                 className="h-14 bg-gradient-to-r from-[#009966] to-[#009689] text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl hover:brightness-110 transition-all duration-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading && <Loader2 className="size-5 animate-spin" />}

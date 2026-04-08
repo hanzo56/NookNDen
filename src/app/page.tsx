@@ -15,10 +15,13 @@ import AuthButton from "@/components/AuthButton";
 import HeroButtons from "@/components/HeroButtons";
 import RoomShowcase from "@/components/RoomShowcase";
 import AssetTracking from "@/components/AssetTracking";
+import InsuranceClaims from "@/components/InsuranceClaims";
 import {
   ParallaxBackground,
   HeroContent,
   ScrollReveal,
+  StaggerChildren,
+  FadeIn,
 } from "@/components/ScrollParallax";
 
 const HERO_BG =
@@ -136,12 +139,12 @@ export default function LandingPage() {
       </section>
 
       {/* ─── Features ─── */}
-      <ScrollReveal>
-        <section
-          id="features"
-          className="relative bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] py-20 lg:py-24 px-6"
-        >
-          <div className="max-w-[1280px] mx-auto">
+      <section
+        id="features"
+        className="relative bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] py-20 lg:py-24 px-6"
+      >
+        <div className="max-w-[1280px] mx-auto">
+          <FadeIn direction="up">
             <div className="text-center mb-14">
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f172b] tracking-tight">
                 Everything You Need
@@ -151,31 +154,34 @@ export default function LandingPage() {
                 inventory and maintenance history
               </p>
             </div>
+          </FadeIn>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {features.map((feature) => (
-                <div
-                  key={feature.title}
-                  className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
-                >
-                  <div className="size-12 rounded-xl bg-gradient-to-br from-[#00bc7d] to-[#009689] flex items-center justify-center mb-5">
-                    <feature.icon
-                      className="size-6 text-white"
-                      strokeWidth={1.8}
-                    />
-                  </div>
-                  <h3 className="text-lg font-semibold text-[#0f172b] mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-sm text-[#45556c] leading-relaxed">
-                    {feature.description}
-                  </p>
+          <StaggerChildren
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+            staggerMs={80}
+          >
+            {features.map((feature) => (
+              <div
+                key={feature.title}
+                className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+              >
+                <div className="size-12 rounded-xl bg-gradient-to-br from-[#00bc7d] to-[#009689] flex items-center justify-center mb-5">
+                  <feature.icon
+                    className="size-6 text-white"
+                    strokeWidth={1.8}
+                  />
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      </ScrollReveal>
+                <h3 className="text-lg font-semibold text-[#0f172b] mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-sm text-[#45556c] leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+            ))}
+          </StaggerChildren>
+        </div>
+      </section>
 
       <ScrollReveal>
         <RoomShowcase />
@@ -184,6 +190,9 @@ export default function LandingPage() {
       <ScrollReveal>
         <AssetTracking />
       </ScrollReveal>
+
+      <InsuranceClaims />
+
       <Footer />
     </main>
   );

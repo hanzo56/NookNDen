@@ -9,6 +9,7 @@ import {
   FileText,
   Lock,
 } from "lucide-react";
+import { StaggerChildren, FadeIn } from "@/components/ScrollParallax";
 
 const trackingFeatures = [
   {
@@ -53,23 +54,26 @@ export default function AssetTracking() {
     <section className="relative bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] py-20 lg:py-24 px-6 overflow-hidden">
       <div className="max-w-[1280px] mx-auto">
         {/* Header */}
-        <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 bg-[#cbfbf1] text-[#00786f] font-semibold text-sm px-4 py-2 rounded-full mb-4">
-            <Tag className="size-4" />
-            Complete Asset Tracking
+        <FadeIn direction="up">
+          <div className="text-center mb-14">
+            <div className="inline-flex items-center gap-2 bg-[#cbfbf1] text-[#00786f] font-semibold text-sm px-4 py-2 rounded-full mb-4">
+              <Tag className="size-4" />
+              Complete Asset Tracking
+            </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f172b] tracking-tight">
+              Track Every Detail
+            </h2>
+            <p className="mt-5 text-lg md:text-xl text-[#45556c] max-w-3xl mx-auto leading-relaxed">
+              From serial numbers to warranty dates, maintain comprehensive records
+              for every asset in your home with our powerful tracking system.
+            </p>
           </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f172b] tracking-tight">
-            Track Every Detail
-          </h2>
-          <p className="mt-5 text-lg md:text-xl text-[#45556c] max-w-3xl mx-auto leading-relaxed">
-            From serial numbers to warranty dates, maintain comprehensive records
-            for every asset in your home with our powerful tracking system.
-          </p>
-        </div>
+        </FadeIn>
 
         {/* Content: Example Card + Features */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-14">
           {/* Example Asset Card */}
+          <FadeIn direction="left">
           <div className="bg-white border-2 border-[#e2e8f0] rounded-3xl overflow-hidden shadow-2xl">
             {/* Card Header */}
             <div className="bg-gradient-to-r from-[#00bc7d] to-[#009689] p-6">
@@ -187,9 +191,10 @@ export default function AssetTracking() {
               </div>
             </div>
           </div>
+          </FadeIn>
 
           {/* Features List */}
-          <div className="flex flex-col justify-center gap-4">
+          <StaggerChildren className="flex flex-col justify-center gap-4" staggerMs={120}>
             {trackingFeatures.map((feature) => (
               <div
                 key={feature.title}
@@ -213,15 +218,15 @@ export default function AssetTracking() {
                 </div>
               </div>
             ))}
-          </div>
+          </StaggerChildren>
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <StaggerChildren className="grid grid-cols-2 lg:grid-cols-4 gap-6" staggerMs={100}>
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="bg-white border border-[#e2e8f0] rounded-2xl shadow-lg p-6 text-center"
+              className="bg-white border border-[#e2e8f0] rounded-2xl shadow-lg p-6 text-center hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
             >
               <p
                 className={`text-4xl font-bold ${stat.color} tracking-wide`}
@@ -231,7 +236,7 @@ export default function AssetTracking() {
               <p className="text-sm text-[#45556c] mt-2">{stat.label}</p>
             </div>
           ))}
-        </div>
+        </StaggerChildren>
       </div>
     </section>
   );

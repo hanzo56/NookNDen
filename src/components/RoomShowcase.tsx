@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Home, Package, Camera, MapPin, ImageIcon, Filter } from "lucide-react";
+import { StaggerChildren, FadeIn } from "@/components/ScrollParallax";
 
 const ROOM_IMAGES = {
   kitchen:
@@ -93,23 +94,25 @@ export default function RoomShowcase() {
 
       <div className="relative max-w-[1280px] mx-auto">
         {/* Header */}
-        <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 bg-[#d0fae5] text-[#007a55] font-semibold text-sm px-4 py-2 rounded-full mb-4">
-            <Home className="size-4" />
-            Organize by Room
+        <FadeIn direction="up">
+          <div className="text-center mb-14">
+            <div className="inline-flex items-center gap-2 bg-[#d0fae5] text-[#007a55] font-semibold text-sm px-4 py-2 rounded-full mb-4">
+              <Home className="size-4" />
+              Organize by Room
+            </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f172b] tracking-tight">
+              Room-Based Organization
+            </h2>
+            <p className="mt-5 text-lg md:text-xl text-[#45556c] max-w-3xl mx-auto leading-relaxed">
+              Create virtual rooms and assign items to specific locations. Track
+              everything from your kitchen appliances to garage tools with
+              location-based organization.
+            </p>
           </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f172b] tracking-tight">
-            Room-Based Organization
-          </h2>
-          <p className="mt-5 text-lg md:text-xl text-[#45556c] max-w-3xl mx-auto leading-relaxed">
-            Create virtual rooms and assign items to specific locations. Track
-            everything from your kitchen appliances to garage tools with
-            location-based organization.
-          </p>
-        </div>
+        </FadeIn>
 
         {/* Room Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 overflow-visible">
+        <StaggerChildren className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 overflow-visible" staggerMs={120}>
           {rooms.map((room) => (
             <div
               key={room.name}
@@ -146,10 +149,10 @@ export default function RoomShowcase() {
               </div>
             </div>
           ))}
-        </div>
+        </StaggerChildren>
 
         {/* Feature Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <StaggerChildren className="grid grid-cols-1 md:grid-cols-3 gap-6" staggerMs={150}>
           {roomFeatures.map((feature) => (
             <div
               key={feature.title}
@@ -168,7 +171,7 @@ export default function RoomShowcase() {
               </p>
             </div>
           ))}
-        </div>
+        </StaggerChildren>
       </div>
     </section>
   );

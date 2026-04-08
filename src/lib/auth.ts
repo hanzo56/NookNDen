@@ -18,7 +18,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const { data: user, error } = await supabase
           .from("users")
-          .select("id, email, first_name, last_name, password_hash")
+          .select("id, email, first_name, last_name, password_hash, email_verified")
           .eq("email", email)
           .single();
 
@@ -26,6 +26,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const passwordMatch = await bcrypt.compare(password, user.password_hash);
         if (!passwordMatch) return null;
+
+        if (!user.email_verified) {
+          throw new Error("EMAIL_NOT_VERIFIED");
+        }
 
         return {
           id: user.id,
