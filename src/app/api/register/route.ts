@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { supabase } from "@/lib/supabase";
 import { Resend } from "resend";
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
+    const verificationToken = crypto.randomBytes(32).toString("hex");
 
     const birthdayDate =
       birthday?.month && birthday?.day && birthday?.year
@@ -50,9 +52,11 @@ export async function POST(request: Request) {
       birthday: birthdayDate,
       gender: gender || null,
       email_verified: false,
+      verification_token: verificationToken,
     });
 
     if (insertError) {
+      console.error("User insert error:", insertError);
       return NextResponse.json(
         { error: "Failed to create account. Please try again." },
         { status: 500 }
@@ -60,36 +64,8 @@ export async function POST(request: Request) {
     }
 
     const siteUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const verifyUrl = `${siteUrl}/api/auth/verify?token=${verificationToken}`;
 
-    // Clean up any stale Supabase Auth user from prior attempts
-    const { data: existingAuthUsers } =
-      await supabase.auth.admin.listUsers({ perPage: 1000 });
-    const staleAuthUser = existingAuthUsers?.users?.find(
-      (u) => u.email === email
-    );
-    if (staleAuthUser) {
-      await supabase.auth.admin.deleteUser(staleAuthUser.id);
-    }
-
-    // Generate verification link via Supabase (does NOT send an email)
-    const { data: linkData, error: linkError } =
-      await supabase.auth.admin.generateLink({
-        type: "signup",
-        email,
-        password,
-        options: {
-          redirectTo: `${siteUrl}/api/auth/verify`,
-        },
-      });
-
-    if (linkError || !linkData.properties?.hashed_token) {
-      console.error("Failed to generate verification link:", linkError);
-      return NextResponse.json({ success: true }, { status: 201 });
-    }
-
-    const verifyUrl = `${siteUrl}/api/auth/verify?token_hash=${linkData.properties.hashed_token}&type=signup`;
-
-    // Send the email ourselves via Resend
     const resendKey = process.env.RESEND_API_KEY;
     if (resendKey) {
       const resend = new Resend(resendKey);

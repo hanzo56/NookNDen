@@ -3,56 +3,52 @@ import { createClient } from "@supabase/supabase-js";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const token_hash = searchParams.get("token_hash");
-  const type = searchParams.get("type");
+  const token = searchParams.get("token");
   const siteUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
 
-  if (!token_hash || type !== "signup") {
-    console.error("Invalid verify params:", { token_hash: !!token_hash, type });
+  if (!token) {
     return NextResponse.redirect(
       `${siteUrl}/login?error=invalid-verification-link`
     );
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
-  // Use the anon key client for OTP verification (service role auto-confirms and skips validation)
-  const supabaseAnon = createClient(supabaseUrl, anonKey);
-  const supabaseAdmin = createClient(supabaseUrl, serviceKey);
+  const { data: user, error: lookupError } = await supabase
+    .from("users")
+    .select("id, email, email_verified")
+    .eq("verification_token", token)
+    .single();
 
-  const { data, error } = await supabaseAnon.auth.verifyOtp({
-    token_hash,
-    type: "signup",
-  });
+  if (lookupError || !user) {
+    console.error("Verify token lookup failed:", lookupError);
+    return NextResponse.redirect(
+      `${siteUrl}/login?error=invalid-verification-link`
+    );
+  }
 
-  if (error || !data.user?.email) {
-    console.error("Email verification error:", error);
-    console.error("Verify data:", JSON.stringify(data));
+  if (user.email_verified) {
+    return NextResponse.redirect(
+      `${siteUrl}/login?verified=true`
+    );
+  }
 
-    // Fallback: try to extract the email from the token by looking up the auth user
-    // and mark as verified directly if the token was already consumed
-    if (error?.message?.includes("expired") || error?.message?.includes("already")) {
-      console.log("Token may have been already used or expired");
-    }
+  const { error: updateError } = await supabase
+    .from("users")
+    .update({ email_verified: true, verification_token: null })
+    .eq("id", user.id);
 
+  if (updateError) {
+    console.error("Failed to update email_verified:", updateError);
     return NextResponse.redirect(
       `${siteUrl}/login?error=verification-failed`
     );
   }
 
-  const { error: updateError } = await supabaseAdmin
-    .from("users")
-    .update({ email_verified: true })
-    .eq("email", data.user.email);
-
-  if (updateError) {
-    console.error("Failed to update email_verified:", updateError);
-  } else {
-    console.log("Email verified successfully for:", data.user.email);
-  }
-
+  console.log("Email verified successfully for:", user.email);
   return NextResponse.redirect(
     `${siteUrl}/login?verified=true`
   );
