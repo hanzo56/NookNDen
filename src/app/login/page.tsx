@@ -19,10 +19,18 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const showLoggedOut = searchParams.get("loggedOut") === "true";
+  const showVerified = searchParams.get("verified") === "true";
+  const verifyError = searchParams.get("error");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(
+    verifyError === "verification-failed"
+      ? "Email verification failed. Please try registering again."
+      : verifyError === "invalid-verification-link"
+        ? "Invalid verification link. Please check your email and try again."
+        : ""
+  );
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -38,7 +46,13 @@ function LoginContent() {
       });
 
       if (result?.error) {
-        setError("Invalid email or password. Please try again.");
+        if (result.error.includes("EMAIL_NOT_VERIFIED")) {
+          setError(
+            "Please verify your email before logging in. Check your inbox for the verification link."
+          );
+        } else {
+          setError("Invalid email or password. Please try again.");
+        }
         setLoading(false);
       } else {
         router.push("/inventory");
@@ -88,6 +102,20 @@ function LoginContent() {
               Your Home&apos;s Digital DNA
             </p>
           </div>
+
+          {showVerified && (
+            <div className="w-full bg-[#d0fae5] border-2 border-[#5ee9b5] rounded-xl px-4 py-4 flex gap-3">
+              <AlertCircle className="size-5 text-[#004f3b] shrink-0 mt-0.5" />
+              <div>
+                <p className="text-base font-semibold text-[#004f3b]">
+                  Email verified successfully!
+                </p>
+                <p className="text-sm text-[#007a55] mt-1">
+                  Your account is now active. Please log in to get started.
+                </p>
+              </div>
+            </div>
+          )}
 
           {showLoggedOut && (
             <div className="w-full bg-[#d0fae5] border-2 border-[#5ee9b5] rounded-xl px-4 py-4 flex gap-3">
