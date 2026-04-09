@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import ItemCard from "@/components/ItemCard";
 import AddItemModal from "@/components/AddItemModal";
-import AddRoomModal from "@/components/AddRoomModal";
 import Footer from "@/components/Footer";
 import type { InventoryItem, Room } from "@/lib/types";
 
@@ -30,7 +29,6 @@ export default function InventoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showAddRoomModal, setShowAddRoomModal] = useState(false);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const avatarMenuRef = useRef<HTMLDivElement>(null);
 
@@ -92,11 +90,6 @@ export default function InventoryPage() {
     fetchItems();
   }
 
-  function handleRoomAdded() {
-    setShowAddRoomModal(false);
-    fetchRooms();
-  }
-
   if (status === "loading") {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#f8fafc]">
@@ -142,13 +135,6 @@ export default function InventoryPage() {
               My Rooms
             </button>
             <button
-              onClick={() => setShowAddRoomModal(true)}
-              className="hidden lg:flex items-center gap-2 bg-white/10 border border-white/30 text-white font-semibold text-base px-6 py-3 rounded-xl hover:bg-white/20 transition-all cursor-pointer"
-            >
-              <MapPin className="size-5" />
-              Add Room
-            </button>
-            <button
               onClick={() => setShowAddModal(true)}
               className="hidden lg:flex items-center gap-2 bg-white text-[#007a55] font-semibold text-base px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer"
             >
@@ -163,13 +149,6 @@ export default function InventoryPage() {
               title="My Rooms"
             >
               <MapPin className="size-5 text-white" />
-            </button>
-            <button
-              onClick={() => setShowAddRoomModal(true)}
-              className="lg:hidden size-10 rounded-[10px] bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer"
-              title="Add Room"
-            >
-              <Plus className="size-5 text-white" />
             </button>
             <button
               onClick={() => setShowAddModal(true)}
@@ -329,13 +308,6 @@ export default function InventoryPage() {
           rooms={rooms}
           onClose={() => setShowAddModal(false)}
           onAdded={handleItemAdded}
-        />
-      )}
-
-      {showAddRoomModal && (
-        <AddRoomModal
-          onClose={() => setShowAddRoomModal(false)}
-          onAdded={handleRoomAdded}
         />
       )}
 

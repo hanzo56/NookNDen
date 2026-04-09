@@ -9,8 +9,9 @@ import {
   MapPin,
   Loader2,
   Camera,
-  Package,
+  Plus,
 } from "lucide-react";
+import AddRoomModal from "@/components/AddRoomModal";
 import Footer from "@/components/Footer";
 import type { Room } from "@/lib/types";
 
@@ -29,10 +30,11 @@ const ROOM_TYPE_COLORS: Record<string, { bg: string; text: string }> = {
 };
 
 export default function RoomsPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAddRoomModal, setShowAddRoomModal] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -55,6 +57,11 @@ export default function RoomsPage() {
     if (status === "authenticated") fetchRooms();
   }, [status, fetchRooms]);
 
+  function handleRoomAdded() {
+    setShowAddRoomModal(false);
+    fetchRooms();
+  }
+
   if (status === "loading" || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#f8fafc]">
@@ -74,7 +81,7 @@ export default function RoomsPage() {
           Back to Inventory
         </button>
 
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
           <div className="flex items-center gap-3">
             <div
               className="size-12 rounded-xl shadow-lg flex items-center justify-center"
@@ -93,6 +100,14 @@ export default function RoomsPage() {
               </p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => setShowAddRoomModal(true)}
+            className="inline-flex items-center justify-center gap-2 bg-[#009966] text-white font-semibold text-base px-6 py-3 rounded-xl shadow-md hover:bg-[#007a55] transition-colors cursor-pointer shrink-0 w-full sm:w-auto"
+          >
+            <Plus className="size-5" />
+            Add Room
+          </button>
         </div>
 
         {rooms.length === 0 ? (
@@ -102,7 +117,7 @@ export default function RoomsPage() {
             </div>
             <p className="text-lg text-[#45556c]">No rooms yet</p>
             <p className="text-sm text-[#62748e]">
-              Add a room from the inventory page to get started.
+              Use Add Room above to create your first room.
             </p>
           </div>
         ) : (
@@ -162,6 +177,13 @@ export default function RoomsPage() {
           </div>
         )}
       </div>
+
+      {showAddRoomModal && (
+        <AddRoomModal
+          onClose={() => setShowAddRoomModal(false)}
+          onAdded={handleRoomAdded}
+        />
+      )}
 
       <Footer />
     </div>
