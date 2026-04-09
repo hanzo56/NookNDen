@@ -30,12 +30,17 @@ import type { InventoryItem, Room } from "@/lib/types";
 import { compressImage } from "@/lib/image-utils";
 
 const CATEGORIES = [
+  "Automotive",
+  "Appliances",
   "HVAC",
   "Electrical",
-  "Appliances",
   "Electronics",
-  "Plumbing",
+  "Eyeglasses",
+
   "Furniture",
+  "Jewelry",
+  "Plumbing",
+  "Tools",
   "Other",
 ];
 
@@ -104,7 +109,10 @@ export default function ItemDetailPage() {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (roomInputRef.current && !roomInputRef.current.contains(e.target as Node)) {
+      if (
+        roomInputRef.current &&
+        !roomInputRef.current.contains(e.target as Node)
+      ) {
         setShowRoomDropdown(false);
       }
     }
@@ -115,7 +123,7 @@ export default function ItemDetailPage() {
   const filteredRooms = rooms.filter(
     (r) =>
       r.name.toLowerCase().includes(roomSearch.toLowerCase()) ||
-      r.room_type.toLowerCase().includes(roomSearch.toLowerCase())
+      r.room_type.toLowerCase().includes(roomSearch.toLowerCase()),
   );
 
   useEffect(() => {
@@ -484,8 +492,7 @@ export default function ItemDetailPage() {
             <div
               className="size-12 rounded-xl shadow-lg flex items-center justify-center"
               style={{
-                background:
-                  "linear-gradient(135deg, #009966 0%, #007a55 100%)",
+                background: "linear-gradient(135deg, #009966 0%, #007a55 100%)",
               }}
             >
               <Package className="size-6 text-white" />
@@ -508,9 +515,7 @@ export default function ItemDetailPage() {
               </h1>
               {(item.manufacturer || item.model) && (
                 <p className="text-base text-[#45556c] mt-0.5">
-                  {[item.manufacturer, item.model]
-                    .filter(Boolean)
-                    .join(" • ")}
+                  {[item.manufacturer, item.model].filter(Boolean).join(" • ")}
                 </p>
               )}
             </div>
@@ -683,10 +688,7 @@ export default function ItemDetailPage() {
             </div>
 
             {editing ? (
-              <form
-                onSubmit={handleSave}
-                className="p-6 flex flex-col gap-4"
-              >
+              <form onSubmit={handleSave} className="p-6 flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-semibold text-[#314158]">
                     Item Name
@@ -907,7 +909,9 @@ export default function ItemDetailPage() {
                     <span className="text-sm text-[#45556c]">Location:</span>
                     {item.room_id ? (
                       <button
-                        onClick={() => router.push(`/inventory/rooms/${item.room_id}`)}
+                        onClick={() =>
+                          router.push(`/inventory/rooms/${item.room_id}`)
+                        }
                         className="text-sm font-medium text-[#009966] underline decoration-[#009966]/30 hover:decoration-[#009966] transition-colors cursor-pointer"
                       >
                         {item.location}
@@ -993,7 +997,7 @@ export default function ItemDetailPage() {
               <div className="flex flex-col gap-3">
                 {documents.map((doc, i) => {
                   const fileName = decodeURIComponent(
-                    doc.split("/").pop() || "Document"
+                    doc.split("/").pop() || "Document",
                   );
                   const isPdf = doc.toLowerCase().endsWith(".pdf");
 
@@ -1103,7 +1107,7 @@ export default function ItemDetailPage() {
                 onClick={(e) => {
                   e.stopPropagation();
                   setActivePhoto((prev) =>
-                    prev === 0 ? photos.length - 1 : prev - 1
+                    prev === 0 ? photos.length - 1 : prev - 1,
                   );
                 }}
                 className="absolute left-4 size-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer z-10"
@@ -1114,7 +1118,7 @@ export default function ItemDetailPage() {
                 onClick={(e) => {
                   e.stopPropagation();
                   setActivePhoto((prev) =>
-                    prev === photos.length - 1 ? 0 : prev + 1
+                    prev === photos.length - 1 ? 0 : prev + 1,
                   );
                 }}
                 className="absolute right-4 size-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer z-10"
