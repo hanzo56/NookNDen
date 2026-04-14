@@ -113,7 +113,8 @@ export default function LandingPage() {
             A comprehensive platform to track every detail of your
             residence&mdash;from structural data and appliance warranties to
             maintenance history and aesthetic elements. Empower yourself to
-            maintain your property&apos;s value and efficiency.
+            maintain your property&apos;s value and efficiency. Demo Version for
+            the Class! Version 2.0
           </p>
 
           <HeroButtons />
