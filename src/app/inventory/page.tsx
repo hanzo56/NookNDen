@@ -11,12 +11,11 @@ import {
   Loader2,
   Package,
   X,
-  MapPin,
+  DoorOpen,
   LogOut,
 } from "lucide-react";
 import ItemCard from "@/components/ItemCard";
 import AddItemModal from "@/components/AddItemModal";
-import AddRoomModal from "@/components/AddRoomModal";
 import Footer from "@/components/Footer";
 import type { InventoryItem, Room } from "@/lib/types";
 
@@ -30,7 +29,6 @@ export default function InventoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showAddRoomModal, setShowAddRoomModal] = useState(false);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const avatarMenuRef = useRef<HTMLDivElement>(null);
 
@@ -92,11 +90,6 @@ export default function InventoryPage() {
     fetchItems();
   }
 
-  function handleRoomAdded() {
-    setShowAddRoomModal(false);
-    fetchRooms();
-  }
-
   if (status === "loading") {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#f8fafc]">
@@ -115,101 +108,98 @@ export default function InventoryPage() {
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9]">
       {/* Header */}
       <header className="bg-gradient-to-r from-[#006045] to-[#0d542b] px-6 lg:px-16 pt-8 pb-24">
-        <div className="max-w-[1280px] mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push("/")}
-              className="size-10 rounded-[10px] bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer"
-            >
-              <Home className="size-6 text-white" strokeWidth={1.5} />
-            </button>
-            <div>
-              <h1 className="text-[28px] font-bold text-white tracking-tight leading-tight">
-                Home Inventory
-              </h1>
-              <p className="text-base text-[#d0fae5]">
-                {items.length} item{items.length !== 1 ? "s" : ""} tracked
-              </p>
+        <div className="max-w-[1280px] mx-auto flex flex-col gap-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-4 min-w-0 flex-1">
+              <button
+                onClick={() => router.push("/")}
+                className="size-10 shrink-0 rounded-[10px] bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer"
+              >
+                <Home className="size-6 text-white" strokeWidth={1.5} />
+              </button>
+              <div className="min-w-0">
+                <h1 className="text-[28px] font-bold text-white tracking-tight leading-tight">
+                  Items
+                </h1>
+                <p className="text-base text-[#d0fae5]">
+                  My Rooms · {items.length} item{items.length !== 1 ? "s" : ""}{" "}
+                  tracked
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 lg:gap-3 shrink-0">
+              <div className="hidden lg:flex items-center gap-2 lg:gap-3">
+                <button
+                  type="button"
+                  onClick={() => router.push("/inventory/rooms")}
+                  className="flex items-center gap-2 bg-white/10 border border-white/30 text-white font-semibold text-base px-6 py-3 rounded-xl hover:bg-white/20 transition-all cursor-pointer"
+                >
+                  <DoorOpen className="size-5 shrink-0" />
+                  My Rooms
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(true)}
+                  className="flex items-center gap-2 bg-white text-[#007a55] font-semibold text-base px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer"
+                >
+                  <Plus className="size-5 shrink-0" />
+                  New Item
+                </button>
+              </div>
+
+              {session?.user?.name && (
+                <div className="relative" ref={avatarMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setShowAvatarMenu((v) => !v)}
+                    className="size-12 rounded-full bg-white border-2 border-white shadow-lg flex items-center justify-center text-[#006045] font-bold text-lg cursor-pointer hover:ring-2 hover:ring-white/50 transition-all"
+                  >
+                    {session.user.name.charAt(0).toUpperCase()}
+                  </button>
+                  {showAvatarMenu && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50">
+                      <div className="px-4 py-2 border-b border-gray-100">
+                        <p className="text-sm font-semibold text-gray-900 truncate">
+                          {session.user.name}
+                        </p>
+                        {session.user.email && (
+                          <p className="text-xs text-gray-500 truncate">
+                            {session.user.email}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => signOut({ callbackUrl: "/" })}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                      >
+                        <LogOut className="size-4" />
+                        Log Out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-2 lg:gap-3">
-            {/* Desktop full buttons (>=1024px) */}
+
+          <div className="flex lg:hidden flex-col gap-2 w-full">
             <button
-              onClick={() => router.push("/inventory/rooms")}
-              className="hidden lg:flex items-center gap-2 bg-white/10 border border-white/30 text-white font-semibold text-base px-6 py-3 rounded-xl hover:bg-white/20 transition-all cursor-pointer"
+              type="button"
+              onClick={() => setShowAddModal(true)}
+              className="w-full flex items-center justify-center gap-2 bg-white text-[#007a55] font-semibold text-base px-6 py-3 rounded-xl shadow-lg hover:bg-white/90 transition-all cursor-pointer"
             >
-              <MapPin className="size-5" />
+              <Plus className="size-5 shrink-0" />
+              New Item
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push("/inventory/rooms")}
+              className="w-full flex items-center justify-center gap-2 bg-white/10 border border-white/30 text-white font-semibold text-base px-6 py-3 rounded-xl hover:bg-white/20 transition-all cursor-pointer"
+            >
+              <DoorOpen className="size-5 shrink-0" />
               My Rooms
             </button>
-            <button
-              onClick={() => setShowAddRoomModal(true)}
-              className="hidden lg:flex items-center gap-2 bg-white/10 border border-white/30 text-white font-semibold text-base px-6 py-3 rounded-xl hover:bg-white/20 transition-all cursor-pointer"
-            >
-              <MapPin className="size-5" />
-              Add Room
-            </button>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="hidden lg:flex items-center gap-2 bg-white text-[#007a55] font-semibold text-base px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer"
-            >
-              <Plus className="size-5" />
-              Add Item
-            </button>
-
-            {/* Mobile icon-only buttons (<1024px) */}
-            <button
-              onClick={() => router.push("/inventory/rooms")}
-              className="lg:hidden size-10 rounded-[10px] bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer"
-              title="My Rooms"
-            >
-              <MapPin className="size-5 text-white" />
-            </button>
-            <button
-              onClick={() => setShowAddRoomModal(true)}
-              className="lg:hidden size-10 rounded-[10px] bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer"
-              title="Add Room"
-            >
-              <Plus className="size-5 text-white" />
-            </button>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="lg:hidden size-10 rounded-[10px] bg-white flex items-center justify-center hover:bg-white/90 transition-colors cursor-pointer shadow-lg"
-              title="Add Item"
-            >
-              <Package className="size-5 text-[#007a55]" />
-            </button>
-
-            {session?.user?.name && (
-              <div className="relative" ref={avatarMenuRef}>
-                <button
-                  onClick={() => setShowAvatarMenu((v) => !v)}
-                  className="size-12 rounded-full bg-white border-2 border-white shadow-lg flex items-center justify-center text-[#006045] font-bold text-lg cursor-pointer hover:ring-2 hover:ring-white/50 transition-all"
-                >
-                  {session.user.name.charAt(0).toUpperCase()}
-                </button>
-                {showAvatarMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50">
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <p className="text-sm font-semibold text-gray-900 truncate">
-                        {session.user.name}
-                      </p>
-                      {session.user.email && (
-                        <p className="text-xs text-gray-500 truncate">
-                          {session.user.email}
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => signOut({ callbackUrl: "/" })}
-                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                    >
-                      <LogOut className="size-4" />
-                      Log Out
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </header>
@@ -329,13 +319,6 @@ export default function InventoryPage() {
           rooms={rooms}
           onClose={() => setShowAddModal(false)}
           onAdded={handleItemAdded}
-        />
-      )}
-
-      {showAddRoomModal && (
-        <AddRoomModal
-          onClose={() => setShowAddRoomModal(false)}
-          onAdded={handleRoomAdded}
         />
       )}
 
