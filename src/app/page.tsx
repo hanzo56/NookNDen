@@ -102,7 +102,7 @@ export default function LandingPage() {
           </div>
 
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight leading-tight">
-            Nook n&apos; Den
+            Nook n&apos; Den - Demo Version for the Class!
           </h1>
 
           <p className="text-xl md:text-2xl text-[#a7f3d0] font-normal">
