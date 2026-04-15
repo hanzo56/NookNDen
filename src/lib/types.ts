@@ -9,6 +9,15 @@ export interface Room {
   updated_at: string;
 }
 
+/** Result of Gemini label / product photo extraction (always verify before saving). */
+export interface ExtractedProductLabel {
+  manufacturer: string | null;
+  model: string | null;
+  serialNumber: string | null;
+  confidence: "high" | "medium" | "low";
+  notes: string | null;
+}
+
 export interface InventoryItem {
   id: string;
   user_id: string;
