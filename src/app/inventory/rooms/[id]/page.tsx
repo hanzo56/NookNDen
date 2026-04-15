@@ -49,6 +49,7 @@ export default function RoomDetailPage() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [deletingUrl, setDeletingUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -179,21 +180,43 @@ export default function RoomDetailPage() {
   }
 
   async function handleDeletePhoto(index: number) {
+    if (deletingUrl !== null) return;
+    const removedUrl = photos[index];
+    const previousPhotos = [...photos];
     const newPhotos = photos.filter((_, i) => i !== index);
+
+    setDeletingUrl(removedUrl);
     setPhotos(newPhotos);
+    setUploadError("");
 
     try {
       const res = await fetch(`/api/rooms/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description, room_type: roomType, photos: newPhotos }),
+        body: JSON.stringify({
+          name,
+          description,
+          room_type: roomType,
+          photos: newPhotos,
+        }),
       });
       if (res.ok) {
         const data = await res.json();
         setRoom(data.room);
+        await fetch("/api/upload/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: removedUrl }),
+        });
+      } else {
+        setPhotos(previousPhotos);
+        setUploadError("Could not remove photo. Try again.");
       }
     } catch {
-      // Will persist on next save
+      setPhotos(previousPhotos);
+      setUploadError("Could not remove photo. Try again.");
+    } finally {
+      setDeletingUrl(null);
     }
   }
 
@@ -271,7 +294,10 @@ export default function RoomDetailPage() {
               {photos.length > 0 ? (
                 <div className="grid grid-cols-2 gap-3">
                   {photos.map((photo, i) => (
-                    <div key={i} className="group relative aspect-square rounded-xl overflow-hidden bg-[#f1f5f9]">
+                    <div
+                      key={`${photo}-${i}`}
+                      className="relative aspect-square rounded-xl overflow-hidden bg-[#f1f5f9]"
+                    >
                       <Image
                         src={photo}
                         alt={`${room.name} photo ${i + 1}`}
@@ -280,11 +306,19 @@ export default function RoomDetailPage() {
                       />
                       <button
                         type="button"
+                        disabled={deletingUrl !== null}
                         onClick={() => handleDeletePhoto(i)}
-                        className="absolute top-2 right-2 size-8 rounded-lg bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-red-600"
+                        aria-label="Delete photo"
+                        title="Delete photo"
+                        className="absolute top-2 right-2 z-10 size-8 rounded-lg bg-black/55 backdrop-blur-[2px] flex items-center justify-center shadow-md transition-colors cursor-pointer hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Trash2 className="size-4 text-white" />
                       </button>
+                      {deletingUrl === photo && (
+                        <div className="absolute inset-0 z-20 bg-black/40 flex items-center justify-center">
+                          <Loader2 className="size-8 animate-spin text-white" />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
