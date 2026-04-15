@@ -24,6 +24,7 @@ import {
   Pencil,
   ChevronLeft,
   ChevronRight,
+  ScanLine,
 } from "lucide-react";
 import Footer from "@/components/Footer";
 import type { InventoryItem, Room } from "@/lib/types";
@@ -101,11 +102,14 @@ export default function ItemDetailPage() {
   const [documents, setDocuments] = useState<string[]>([]);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [docUploadError, setDocUploadError] = useState("");
+  const [scanningLabel, setScanningLabel] = useState(false);
+  const [scanLabelError, setScanLabelError] = useState("");
 
   const roomInputRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const docInputRef = useRef<HTMLInputElement>(null);
+  const labelScanInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -346,6 +350,47 @@ export default function ItemDetailPage() {
       }
     } catch {
       // Will persist on next save
+    }
+  }
+
+  async function handleLabelScan(files: FileList | null) {
+    if (!files?.length) return;
+    setScanningLabel(true);
+    setScanLabelError("");
+    setError("");
+    try {
+      const compressed = await compressImage(files[0]);
+      const formData = new FormData();
+      formData.append("file", compressed);
+
+      const res = await fetch("/api/ai/extract-product-label", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setScanLabelError(
+          typeof data.error === "string" ? data.error : "Scan failed",
+        );
+        return;
+      }
+      const ex = data.extracted as {
+        manufacturer?: string | null;
+        model?: string | null;
+        serialNumber?: string | null;
+      };
+      if (ex.manufacturer) setManufacturer(ex.manufacturer);
+      if (ex.model) setModel(ex.model);
+      if (ex.serialNumber) setSerialNumber(ex.serialNumber);
+      setSuccess(
+        "Label scanned. Review manufacturer, model, and serial before saving.",
+      );
+      setTimeout(() => setSuccess(""), 5000);
+    } catch {
+      setScanLabelError("Scan failed. Try again.");
+    } finally {
+      setScanningLabel(false);
+      if (labelScanInputRef.current) labelScanInputRef.current.value = "";
     }
   }
 
@@ -717,6 +762,40 @@ export default function ItemDetailPage() {
                     ))}
                   </select>
                 </div>
+
+                <div className="flex flex-col gap-2">
+                  <input
+                    ref={labelScanInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleLabelScan(e.target.files)}
+                  />
+                  {scanLabelError && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-xl text-sm">
+                      {scanLabelError}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    disabled={scanningLabel}
+                    onClick={() => labelScanInputRef.current?.click()}
+                    className="flex items-center justify-center gap-2 border-2 border-dashed border-[#009966]/50 bg-[#ecfdf5] text-[#007a55] font-semibold text-sm py-3 rounded-xl hover:bg-[#d1fae5] transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {scanningLabel ? (
+                      <Loader2 className="size-4 animate-spin shrink-0" />
+                    ) : (
+                      <ScanLine className="size-4 shrink-0" />
+                    )}
+                    {scanningLabel ? "Scanning…" : "Scan label (photo)"}
+                  </button>
+                  <p className="text-xs text-[#62748e]">
+                    Take a clear photo of the product label or nameplate. Values
+                    are filled in for you to verify—especially the serial
+                    number.
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-semibold text-[#314158]">
