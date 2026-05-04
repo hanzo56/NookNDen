@@ -102,13 +102,9 @@ export default function Footer() {
                 <div>
                   <p className="text-sm text-[#90a1b9]">Address</p>
                   <p className="text-sm text-white">
-                    Administrative Division
+                    2810 Aduana Drive
                     <br />
-                    3434 S. Grand Avenue
-                    <br />
-                    3rd Floor
-                    <br />
-                    Los Angeles, CA 90007
+                    Arcadia, CA 91006
                   </p>
                 </div>
               </li>
