@@ -1,8 +1,14 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { X, Loader2, Plus, Search, MapPin } from "lucide-react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { X, Loader2, Plus, Search, MapPin, DollarSign } from "lucide-react";
 import type { Room } from "@/lib/types";
+import {
+  computeInsuranceStyleAcv,
+  formatUsd,
+  ACV_DISCLAIMER,
+} from "@/lib/depreciation";
+import { salePriceFromInput } from "@/lib/sale-price-input";
 
 const CATEGORIES = [
   "HVAC",
@@ -35,6 +41,7 @@ export default function AddItemModal({
   const [roomSearch, setRoomSearch] = useState("");
   const [showRoomDropdown, setShowRoomDropdown] = useState(false);
   const [purchaseDate, setPurchaseDate] = useState("");
+  const [salePrice, setSalePrice] = useState("");
   const [warrantyExpiry, setWarrantyExpiry] = useState("");
   const [supportContact, setSupportContact] = useState("");
   const [notes, setNotes] = useState("");
@@ -60,6 +67,20 @@ export default function AddItemModal({
       r.room_type.toLowerCase().includes(roomSearch.toLowerCase())
   );
 
+  const parsedSalePrice = useMemo(
+    () => salePriceFromInput(salePrice),
+    [salePrice],
+  );
+
+  const acvPreview = useMemo(() => {
+    if (parsedSalePrice == null) return null;
+    return computeInsuranceStyleAcv({
+      salePrice: parsedSalePrice,
+      purchaseDate: purchaseDate || null,
+      category,
+    });
+  }, [parsedSalePrice, purchaseDate, category]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
@@ -83,6 +104,7 @@ export default function AddItemModal({
           location: selectedRoom?.name || null,
           room_id: selectedRoom?.id || null,
           purchase_date: purchaseDate || null,
+          sale_price: salePriceFromInput(salePrice),
           warranty_expiry: warrantyExpiry || null,
           support_contact: supportContact.trim() || null,
           notes: notes.trim() || null,
@@ -301,6 +323,47 @@ export default function AddItemModal({
                 onChange={(e) => setWarrantyExpiry(e.target.value)}
                 className="border-2 border-[#e2e8f0] rounded-xl px-4 py-3 text-base text-[#0f172b] outline-none focus:border-[#009966] transition-colors"
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-[#314158]">
+                Sale price (USD)
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#62748e] text-base">
+                  $
+                </span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  value={salePrice}
+                  onChange={(e) => setSalePrice(e.target.value)}
+                  className="border-2 border-[#e2e8f0] rounded-xl pl-8 pr-4 py-3 text-base text-[#0f172b] outline-none focus:border-[#009966] transition-colors w-full"
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5 rounded-xl border-2 border-[#bfdbfe] bg-[#eff6ff] p-3 justify-center">
+              <p className="text-xs font-semibold text-[#1e3a8a] flex items-center gap-1.5">
+                <DollarSign className="size-3.5 shrink-0" />
+                Est. insurance ACV
+              </p>
+              {acvPreview ? (
+                <>
+                  <p className="text-lg font-bold text-[#0f172b] tabular-nums">
+                    {formatUsd(acvPreview.estimatedActualCashValue)}
+                  </p>
+                  <p className="text-[10px] text-[#62748e] leading-snug mt-1">
+                    {ACV_DISCLAIMER}
+                  </p>
+                </>
+              ) : (
+                <p className="text-xs text-[#45556c]">
+                  Enter price and purchase date for ACV preview.
+                </p>
+              )}
             </div>
           </div>
 

@@ -24,8 +24,7 @@ import {
   FadeIn,
 } from "@/components/ScrollParallax";
 
-const HERO_BG =
-  "https://www.figma.com/api/mcp/asset/54c7bde6-62ed-4c4b-99db-f5349d369187";
+const HERO_BG = "/images/landing/hero.jpg";
 
 const features = [
   {

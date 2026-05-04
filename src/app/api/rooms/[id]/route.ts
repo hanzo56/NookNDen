@@ -24,7 +24,24 @@ export async function GET(
     return NextResponse.json({ error: "Room not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ room: data });
+  const { data: items, error: itemsError } = await supabase
+    .from("inventory_items")
+    .select(
+      "id, name, category, manufacturer, model, serial_number, location, purchase_date, sale_price, photos, warranty_expiry, created_at"
+    )
+    .eq("user_id", session.user.id)
+    .eq("room_id", id)
+    .order("name", { ascending: true });
+
+  if (itemsError) {
+    console.error("Room items GET error:", itemsError);
+    return NextResponse.json(
+      { error: "Failed to load room items", details: itemsError.message },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ room: data, items: items ?? [] });
 }
 
 export async function PUT(

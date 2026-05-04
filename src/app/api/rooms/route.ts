@@ -22,7 +22,32 @@ export async function GET() {
     );
   }
 
-  return NextResponse.json({ rooms: data ?? [] });
+  const rooms = data ?? [];
+  const roomIds = rooms.map((r) => r.id);
+  const countByRoom: Record<string, number> = {};
+
+  if (roomIds.length > 0) {
+    const { data: rows, error: countError } = await supabase
+      .from("inventory_items")
+      .select("room_id")
+      .eq("user_id", session.user.id)
+      .in("room_id", roomIds);
+
+    if (!countError && rows) {
+      for (const row of rows) {
+        if (row.room_id) {
+          countByRoom[row.room_id] = (countByRoom[row.room_id] ?? 0) + 1;
+        }
+      }
+    }
+  }
+
+  const roomsWithCounts = rooms.map((r) => ({
+    ...r,
+    item_count: countByRoom[r.id] ?? 0,
+  }));
+
+  return NextResponse.json({ rooms: roomsWithCounts });
 }
 
 export async function POST(request: NextRequest) {

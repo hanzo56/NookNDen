@@ -3,14 +3,10 @@ import { Home, Package, Camera, MapPin, ImageIcon, Filter } from "lucide-react";
 import { StaggerChildren, FadeIn } from "@/components/ScrollParallax";
 
 const ROOM_IMAGES = {
-  kitchen:
-    "https://www.figma.com/api/mcp/asset/3177467e-3085-44c8-888b-385a322f6e28",
-  livingRoom:
-    "https://www.figma.com/api/mcp/asset/54aeae06-ee0d-4c32-b836-fc6e1c3ef358",
-  bedroom:
-    "https://www.figma.com/api/mcp/asset/08b73c10-0872-47af-997f-d167a5c11eb1",
-  garage:
-    "https://www.figma.com/api/mcp/asset/57217ca0-064c-43ba-a540-7d4d3c1e50f3",
+  kitchen: "/images/landing/room-kitchen.jpg",
+  livingRoom: "/images/landing/room-living-room.jpg",
+  bedroom: "/images/landing/room-bedroom.jpg",
+  garage: "/images/landing/room-garage.jpg",
 };
 
 const rooms = [

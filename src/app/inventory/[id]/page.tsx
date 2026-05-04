@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
@@ -25,10 +25,17 @@ import {
   ChevronLeft,
   ChevronRight,
   ScanLine,
+  DollarSign,
 } from "lucide-react";
 import Footer from "@/components/Footer";
 import type { InventoryItem, Room } from "@/lib/types";
 import { compressImage } from "@/lib/image-utils";
+import {
+  computeInsuranceStyleAcv,
+  formatUsd,
+  ACV_DISCLAIMER,
+} from "@/lib/depreciation";
+import { salePriceFromInput } from "@/lib/sale-price-input";
 
 const CATEGORIES = [
   "Automotive",
@@ -92,6 +99,7 @@ export default function ItemDetailPage() {
   const [roomSearch, setRoomSearch] = useState("");
   const [showRoomDropdown, setShowRoomDropdown] = useState(false);
   const [purchaseDate, setPurchaseDate] = useState("");
+  const [salePrice, setSalePrice] = useState("");
   const [warrantyExpiry, setWarrantyExpiry] = useState("");
   const [supportContact, setSupportContact] = useState("");
   const [notes, setNotes] = useState("");
@@ -110,6 +118,29 @@ export default function ItemDetailPage() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const docInputRef = useRef<HTMLInputElement>(null);
   const labelScanInputRef = useRef<HTMLInputElement>(null);
+
+  const parsedSalePrice = useMemo(
+    () => salePriceFromInput(salePrice),
+    [salePrice],
+  );
+
+  const acvPreviewWhileEditing = useMemo(() => {
+    if (parsedSalePrice == null) return null;
+    return computeInsuranceStyleAcv({
+      salePrice: parsedSalePrice,
+      purchaseDate: purchaseDate || null,
+      category: category || "Other",
+    });
+  }, [parsedSalePrice, purchaseDate, category]);
+
+  const displayAcvFromItem = useMemo(() => {
+    if (!item?.sale_price || item.sale_price <= 0) return null;
+    return computeInsuranceStyleAcv({
+      salePrice: item.sale_price,
+      purchaseDate: item.purchase_date,
+      category: item.category || "Other",
+    });
+  }, [item]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -180,6 +211,11 @@ export default function ItemDetailPage() {
     setSelectedRoom(itm.room || null);
     setRoomSearch("");
     setPurchaseDate(itm.purchase_date || "");
+    setSalePrice(
+      itm.sale_price != null && itm.sale_price !== undefined
+        ? String(itm.sale_price)
+        : "",
+    );
     setWarrantyExpiry(itm.warranty_expiry || "");
     setSupportContact(itm.support_contact || "");
     setNotes(itm.notes || "");
@@ -206,6 +242,7 @@ export default function ItemDetailPage() {
           location: selectedRoom?.name || null,
           room_id: selectedRoom?.id || null,
           purchase_date: purchaseDate || null,
+          sale_price: salePriceFromInput(salePrice),
           warranty_expiry: warrantyExpiry || null,
           support_contact: supportContact.trim() || null,
           notes: notes.trim() || null,
@@ -297,6 +334,7 @@ export default function ItemDetailPage() {
           location: selectedRoom?.name || item?.location || null,
           room_id: selectedRoom?.id || item?.room_id || null,
           purchase_date: purchaseDate || item?.purchase_date || null,
+          sale_price: salePriceFromInput(salePrice),
           warranty_expiry: warrantyExpiry || item?.warranty_expiry || null,
           support_contact: supportContact || item?.support_contact || null,
           notes: notes || item?.notes || null,
@@ -337,6 +375,7 @@ export default function ItemDetailPage() {
           location: selectedRoom?.name || item?.location || null,
           room_id: selectedRoom?.id || item?.room_id || null,
           purchase_date: purchaseDate || item?.purchase_date || null,
+          sale_price: salePriceFromInput(salePrice),
           warranty_expiry: warrantyExpiry || item?.warranty_expiry || null,
           support_contact: supportContact || item?.support_contact || null,
           notes: notes || item?.notes || null,
@@ -440,6 +479,7 @@ export default function ItemDetailPage() {
           location: selectedRoom?.name || item?.location || null,
           room_id: selectedRoom?.id || item?.room_id || null,
           purchase_date: purchaseDate || item?.purchase_date || null,
+          sale_price: salePriceFromInput(salePrice),
           warranty_expiry: warrantyExpiry || item?.warranty_expiry || null,
           support_contact: supportContact || item?.support_contact || null,
           notes: notes || item?.notes || null,
@@ -476,6 +516,7 @@ export default function ItemDetailPage() {
           location: selectedRoom?.name || item?.location || null,
           room_id: selectedRoom?.id || item?.room_id || null,
           purchase_date: purchaseDate || item?.purchase_date || null,
+          sale_price: salePriceFromInput(salePrice),
           warranty_expiry: warrantyExpiry || item?.warranty_expiry || null,
           support_contact: supportContact || item?.support_contact || null,
           notes: notes || item?.notes || null,
@@ -933,6 +974,58 @@ export default function ItemDetailPage() {
                     />
                   </div>
                 </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-semibold text-[#314158]">
+                      Sale price (USD)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#62748e] text-base">
+                        $
+                      </span>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        placeholder="0.00"
+                        value={salePrice}
+                        onChange={(e) => setSalePrice(e.target.value)}
+                        className="border-2 border-[#e2e8f0] rounded-xl pl-8 pr-4 py-3 text-base text-[#0f172b] outline-none focus:border-[#009966] transition-colors w-full"
+                      />
+                    </div>
+                    <p className="text-xs text-[#62748e]">
+                      Replacement cost or purchase price for documentation.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-1.5 rounded-xl border-2 border-[#bfdbfe] bg-[#eff6ff] p-4 justify-center">
+                    <p className="text-sm font-semibold text-[#1e3a8a] flex items-center gap-2">
+                      <DollarSign className="size-4 shrink-0" />
+                      Est. insurance ACV
+                    </p>
+                    {acvPreviewWhileEditing ? (
+                      <>
+                        <p className="text-2xl font-bold text-[#0f172b] tabular-nums">
+                          {formatUsd(
+                            acvPreviewWhileEditing.estimatedActualCashValue,
+                          )}
+                        </p>
+                        <p className="text-xs text-[#45556c] mt-1 leading-relaxed">
+                          {acvPreviewWhileEditing.methodSummary}. Depreciation to
+                          date{" "}
+                          {formatUsd(acvPreviewWhileEditing.totalDepreciation)}{" "}
+                          (age {acvPreviewWhileEditing.ageYears} yr).
+                        </p>
+                        <p className="text-[11px] text-[#62748e] mt-2 leading-snug">
+                          {ACV_DISCLAIMER}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-[#45556c]">
+                        Enter sale price and purchase date to preview
+                        straight-line actual cash value (10% salvage floor).
+                      </p>
+                    )}
+                  </div>
+                </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-semibold text-[#314158]">
                     Support Contact
@@ -1018,6 +1111,40 @@ export default function ItemDetailPage() {
                     <span className="text-sm text-[#0f172b]">
                       {formatDate(item.purchase_date)}
                     </span>
+                  </div>
+                )}
+                {item.sale_price != null && item.sale_price > 0 && (
+                  <div className="flex flex-col gap-3 border-t border-[#e2e8f0] pt-4 mt-1">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <DollarSign className="size-5 text-[#009966] shrink-0" />
+                      <span className="text-sm text-[#45556c]">Sale price:</span>
+                      <span className="text-sm font-semibold text-[#0f172b] tabular-nums">
+                        {formatUsd(item.sale_price)}
+                      </span>
+                    </div>
+                    {displayAcvFromItem ? (
+                      <div className="rounded-xl border border-[#bfdbfe] bg-[#eff6ff] px-4 py-3 ml-0 sm:ml-8">
+                        <p className="text-xs font-semibold text-[#1e3a8a]">
+                          Est. ACV (insurance-style straight-line)
+                        </p>
+                        <p className="text-lg font-bold text-[#0f172b] tabular-nums mt-1">
+                          {formatUsd(
+                            displayAcvFromItem.estimatedActualCashValue,
+                          )}
+                        </p>
+                        <p className="text-xs text-[#45556c] mt-1 leading-relaxed">
+                          {displayAcvFromItem.methodSummary}. Total depreciation:{" "}
+                          {formatUsd(displayAcvFromItem.totalDepreciation)}.
+                        </p>
+                        <p className="text-[11px] text-[#62748e] mt-2 leading-snug">
+                          {ACV_DISCLAIMER}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-[#62748e] sm:ml-8">
+                        Add a purchase date to estimate depreciated (ACV) value.
+                      </p>
+                    )}
                   </div>
                 )}
                 {item.warranty_expiry && (

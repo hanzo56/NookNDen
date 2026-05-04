@@ -13,6 +13,7 @@ import {
   X,
   DoorOpen,
   LogOut,
+  FileDown,
 } from "lucide-react";
 import ItemCard from "@/components/ItemCard";
 import AddItemModal from "@/components/AddItemModal";
@@ -30,6 +31,8 @@ export default function InventoryPage() {
   const [activeCategory, setActiveCategory] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
+  const [reporting, setReporting] = useState(false);
+  const [reportError, setReportError] = useState("");
   const avatarMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -90,6 +93,39 @@ export default function InventoryPage() {
     fetchItems();
   }
 
+  async function handleGenerateFullReport() {
+    setReportError("");
+    setReporting(true);
+    try {
+      const res = await fetch("/api/inventory/report");
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        setReportError(data?.error || "Could not generate report");
+        return;
+      }
+      const blob = await res.blob();
+      const dispo = res.headers.get("Content-Disposition");
+      let filename = "nooknden-inventory-report.pdf";
+      const m = dispo?.match(/filename="([^"]+)"/);
+      if (m?.[1]) filename = m[1];
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setReportError("Could not generate report");
+    } finally {
+      setReporting(false);
+    }
+  }
+
   if (status === "loading") {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#f8fafc]">
@@ -129,6 +165,19 @@ export default function InventoryPage() {
             </div>
             <div className="flex items-center gap-2 lg:gap-3 shrink-0">
               <div className="hidden lg:flex items-center gap-2 lg:gap-3">
+                <button
+                  type="button"
+                  onClick={handleGenerateFullReport}
+                  disabled={reporting}
+                  className="flex items-center gap-2 bg-white/10 border border-white/30 text-white font-semibold text-base px-6 py-3 rounded-xl hover:bg-white/20 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {reporting ? (
+                    <Loader2 className="size-5 shrink-0 animate-spin" />
+                  ) : (
+                    <FileDown className="size-5 shrink-0" />
+                  )}
+                  Generate Report
+                </button>
                 <button
                   type="button"
                   onClick={() => router.push("/inventory/rooms")}
@@ -183,6 +232,12 @@ export default function InventoryPage() {
             </div>
           </div>
 
+          {reportError && (
+            <div className="bg-red-500/20 border border-red-300/50 text-white text-sm px-4 py-2 rounded-xl">
+              {reportError}
+            </div>
+          )}
+
           <div className="flex lg:hidden flex-col gap-2 w-full">
             <button
               type="button"
@@ -192,14 +247,29 @@ export default function InventoryPage() {
               <Plus className="size-5 shrink-0" />
               New Item
             </button>
-            <button
-              type="button"
-              onClick={() => router.push("/inventory/rooms")}
-              className="w-full flex items-center justify-center gap-2 bg-white/10 border border-white/30 text-white font-semibold text-base px-6 py-3 rounded-xl hover:bg-white/20 transition-all cursor-pointer"
-            >
-              <DoorOpen className="size-5 shrink-0" />
-              My Rooms
-            </button>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={handleGenerateFullReport}
+                disabled={reporting}
+                className="flex items-center justify-center gap-2 bg-white/10 border border-white/30 text-white font-semibold text-sm px-3 py-3 rounded-xl hover:bg-white/20 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {reporting ? (
+                  <Loader2 className="size-4 shrink-0 animate-spin" />
+                ) : (
+                  <FileDown className="size-4 shrink-0" />
+                )}
+                Report
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push("/inventory/rooms")}
+                className="flex items-center justify-center gap-2 bg-white/10 border border-white/30 text-white font-semibold text-sm px-3 py-3 rounded-xl hover:bg-white/20 transition-all cursor-pointer"
+              >
+                <DoorOpen className="size-4 shrink-0" />
+                My Rooms
+              </button>
+            </div>
           </div>
         </div>
       </header>

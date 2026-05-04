@@ -11,11 +11,29 @@ import {
   Save,
   Upload,
   Trash2,
-  ImagePlus,
+  Package,
+  ChevronRight,
+  FileDown,
 } from "lucide-react";
 import Image from "next/image";
 import Footer from "@/components/Footer";
-import type { Room } from "@/lib/types";
+import type { InventoryItem, Room } from "@/lib/types";
+
+type RoomInventoryRow = Pick<
+  InventoryItem,
+  | "id"
+  | "name"
+  | "category"
+  | "manufacturer"
+  | "model"
+  | "serial_number"
+  | "location"
+  | "purchase_date"
+  | "sale_price"
+  | "photos"
+  | "warranty_expiry"
+  | "created_at"
+>;
 import { compressImage } from "@/lib/image-utils";
 
 const ROOM_TYPES = [
@@ -38,6 +56,7 @@ export default function RoomDetailPage() {
   const { status } = useSession();
 
   const [room, setRoom] = useState<Room | null>(null);
+  const [items, setItems] = useState<RoomInventoryRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -50,6 +69,8 @@ export default function RoomDetailPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [deletingUrl, setDeletingUrl] = useState<string | null>(null);
+  const [reporting, setReporting] = useState(false);
+  const [reportError, setReportError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -77,6 +98,7 @@ export default function RoomDetailPage() {
       }
       const data = await res.json();
       setRoom(data.room);
+      setItems(data.items ?? []);
       setName(data.room.name);
       setDescription(data.room.description || "");
       setRoomType(data.room.room_type || "Other");
@@ -85,6 +107,40 @@ export default function RoomDetailPage() {
       setError("Failed to load room");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleGenerateReport() {
+    if (!id || !room) return;
+    setReportError("");
+    setReporting(true);
+    try {
+      const res = await fetch(`/api/rooms/${id}/report`);
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        setReportError(data?.error || "Could not generate report");
+        return;
+      }
+      const blob = await res.blob();
+      const dispo = res.headers.get("Content-Disposition");
+      let filename = `${room.name.replace(/\s+/g, "-")}-inventory-report.pdf`;
+      const m = dispo?.match(/filename="([^"]+)"/);
+      if (m?.[1]) filename = m[1];
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setReportError("Could not generate report");
+    } finally {
+      setReporting(false);
     }
   }
 
@@ -255,24 +311,44 @@ export default function RoomDetailPage() {
         </button>
 
         {/* Room Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <div
-            className="size-12 rounded-xl shadow-lg flex items-center justify-center"
-            style={{
-              background: "linear-gradient(135deg, #009966 0%, #007a55 100%)",
-            }}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div
+              className="size-12 rounded-xl shadow-lg flex items-center justify-center shrink-0"
+              style={{
+                background: "linear-gradient(135deg, #009966 0%, #007a55 100%)",
+              }}
+            >
+              <MapPin className="size-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold text-[#0f172b] tracking-tight">
+                {room.name}
+              </h1>
+              <p className="text-base text-[#45556c]">
+                Manage room details and photos
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleGenerateReport}
+            disabled={reporting}
+            className="inline-flex items-center justify-center gap-2 self-start bg-[#0f172b] text-white font-semibold text-sm px-5 py-3 rounded-xl shadow-md hover:bg-[#1e293b] transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <MapPin className="size-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-4xl font-bold text-[#0f172b] tracking-tight">
-              {room.name}
-            </h1>
-            <p className="text-base text-[#45556c]">
-              Manage room details and photos
-            </p>
-          </div>
+            {reporting ? (
+              <Loader2 className="size-5 animate-spin shrink-0" />
+            ) : (
+              <FileDown className="size-5 shrink-0" />
+            )}
+            Generate Report (PDF)
+          </button>
         </div>
+        {reportError && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+            {reportError}
+          </div>
+        )}
 
         {/* Two-column layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -500,6 +576,74 @@ export default function RoomDetailPage() {
                 ))}
               </ul>
             </div>
+          </div>
+        </div>
+
+        {/* Items assigned to this room (inventory.room_id) */}
+        <div className="mt-10 bg-white border border-[#e2e8f0] rounded-2xl overflow-hidden shadow-xl">
+          <div className="bg-gradient-to-r from-[#0f172b] to-[#1e293b] px-6 py-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Package className="size-5 text-white" />
+              <h2 className="text-xl font-bold text-white">
+                Items in this room
+              </h2>
+            </div>
+            <span className="text-sm font-semibold text-[#90a1b9]">
+              {items.length} total
+            </span>
+          </div>
+          <div className="p-6">
+            {items.length === 0 ? (
+              <p className="text-sm text-[#45556c] text-center py-8">
+                No inventory items are assigned to this room yet. Assign items
+                from an item&apos;s detail page or when adding an item.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {items.map((item) => {
+                  const thumb = item.photos?.[0];
+                  const subtitle = [item.manufacturer, item.model]
+                    .filter(Boolean)
+                    .join(" · ");
+                  return (
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          router.push(`/inventory/${item.id}`)
+                        }
+                        className="w-full flex items-center gap-4 p-4 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] hover:bg-white hover:border-[#009966] hover:shadow-md transition-all text-left cursor-pointer group"
+                      >
+                        <div className="relative size-14 shrink-0 rounded-lg overflow-hidden bg-[#e2e8f0]">
+                          {thumb ? (
+                            <Image
+                              src={thumb}
+                              alt=""
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full items-center justify-center">
+                              <Package className="size-6 text-[#90a1b9]" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-[#0f172b] truncate group-hover:text-[#007a55]">
+                            {item.name}
+                          </p>
+                          <p className="text-xs text-[#62748e] mt-0.5">
+                            {item.category}
+                            {subtitle ? ` · ${subtitle}` : ""}
+                          </p>
+                        </div>
+                        <ChevronRight className="size-5 text-[#90a1b9] shrink-0 group-hover:text-[#007a55]" />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
         </div>
       </div>

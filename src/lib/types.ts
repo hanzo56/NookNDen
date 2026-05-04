@@ -7,6 +7,8 @@ export interface Room {
   photos: string[];
   created_at: string;
   updated_at: string;
+  /** Populated by GET /api/rooms when listing rooms. */
+  item_count?: number;
 }
 
 /** Result of Gemini label / product photo extraction (always verify before saving). */
@@ -30,6 +32,8 @@ export interface InventoryItem {
   room_id: string | null;
   room?: Room | null;
   purchase_date: string | null;
+  /** User-entered amount (e.g. replacement cost / purchase price) for records & ACV estimate. */
+  sale_price: number | null;
   warranty_expiry: string | null;
   support_contact: string | null;
   photos: string[];

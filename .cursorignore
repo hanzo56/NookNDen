@@ -1,0 +1,8 @@
+# Keep secrets out of default Cursor context (indexing, some features).
+# Add your real values only in these files locally; never commit them.
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
