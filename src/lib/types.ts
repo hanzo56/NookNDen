@@ -32,6 +32,8 @@ export interface InventoryItem {
   room_id: string | null;
   room?: Room | null;
   purchase_date: string | null;
+  /** User-entered amount (e.g. replacement cost / purchase price) for records & ACV estimate. */
+  sale_price: number | null;
   warranty_expiry: string | null;
   support_contact: string | null;
   photos: string[];

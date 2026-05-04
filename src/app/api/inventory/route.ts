@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
+import { parseSalePriceBody } from "@/lib/sale-price-input";
 
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
         location: body.location || null,
         room_id: body.room_id || null,
         purchase_date: body.purchase_date || null,
+        sale_price: parseSalePriceBody(body.sale_price),
         warranty_expiry: body.warranty_expiry || null,
         support_contact: body.support_contact || null,
         photos: body.photos || [],
