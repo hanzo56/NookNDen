@@ -27,7 +27,7 @@ export async function GET(
   const { data: items, error: itemsError } = await supabase
     .from("inventory_items")
     .select(
-      "id, name, category, manufacturer, model, serial_number, photos, warranty_expiry, created_at"
+      "id, name, category, manufacturer, model, serial_number, location, purchase_date, sale_price, photos, warranty_expiry, created_at"
     )
     .eq("user_id", session.user.id)
     .eq("room_id", id)

@@ -13,6 +13,7 @@ import {
   Trash2,
   Package,
   ChevronRight,
+  FileDown,
 } from "lucide-react";
 import Image from "next/image";
 import Footer from "@/components/Footer";
@@ -26,6 +27,9 @@ type RoomInventoryRow = Pick<
   | "manufacturer"
   | "model"
   | "serial_number"
+  | "location"
+  | "purchase_date"
+  | "sale_price"
   | "photos"
   | "warranty_expiry"
   | "created_at"
@@ -65,6 +69,8 @@ export default function RoomDetailPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [deletingUrl, setDeletingUrl] = useState<string | null>(null);
+  const [reporting, setReporting] = useState(false);
+  const [reportError, setReportError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -101,6 +107,40 @@ export default function RoomDetailPage() {
       setError("Failed to load room");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleGenerateReport() {
+    if (!id || !room) return;
+    setReportError("");
+    setReporting(true);
+    try {
+      const res = await fetch(`/api/rooms/${id}/report`);
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        setReportError(data?.error || "Could not generate report");
+        return;
+      }
+      const blob = await res.blob();
+      const dispo = res.headers.get("Content-Disposition");
+      let filename = `${room.name.replace(/\s+/g, "-")}-inventory-report.pdf`;
+      const m = dispo?.match(/filename="([^"]+)"/);
+      if (m?.[1]) filename = m[1];
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setReportError("Could not generate report");
+    } finally {
+      setReporting(false);
     }
   }
 
@@ -271,24 +311,44 @@ export default function RoomDetailPage() {
         </button>
 
         {/* Room Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <div
-            className="size-12 rounded-xl shadow-lg flex items-center justify-center"
-            style={{
-              background: "linear-gradient(135deg, #009966 0%, #007a55 100%)",
-            }}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div
+              className="size-12 rounded-xl shadow-lg flex items-center justify-center shrink-0"
+              style={{
+                background: "linear-gradient(135deg, #009966 0%, #007a55 100%)",
+              }}
+            >
+              <MapPin className="size-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold text-[#0f172b] tracking-tight">
+                {room.name}
+              </h1>
+              <p className="text-base text-[#45556c]">
+                Manage room details and photos
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleGenerateReport}
+            disabled={reporting}
+            className="inline-flex items-center justify-center gap-2 self-start bg-[#0f172b] text-white font-semibold text-sm px-5 py-3 rounded-xl shadow-md hover:bg-[#1e293b] transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <MapPin className="size-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-4xl font-bold text-[#0f172b] tracking-tight">
-              {room.name}
-            </h1>
-            <p className="text-base text-[#45556c]">
-              Manage room details and photos
-            </p>
-          </div>
+            {reporting ? (
+              <Loader2 className="size-5 animate-spin shrink-0" />
+            ) : (
+              <FileDown className="size-5 shrink-0" />
+            )}
+            Generate Report (PDF)
+          </button>
         </div>
+        {reportError && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+            {reportError}
+          </div>
+        )}
 
         {/* Two-column layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
