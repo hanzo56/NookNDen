@@ -7,6 +7,8 @@ export interface Room {
   photos: string[];
   created_at: string;
   updated_at: string;
+  /** Populated by GET /api/rooms when listing rooms. */
+  item_count?: number;
 }
 
 /** Result of Gemini label / product photo extraction (always verify before saving). */

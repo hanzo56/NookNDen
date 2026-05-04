@@ -11,11 +11,25 @@ import {
   Save,
   Upload,
   Trash2,
-  ImagePlus,
+  Package,
+  ChevronRight,
 } from "lucide-react";
 import Image from "next/image";
 import Footer from "@/components/Footer";
-import type { Room } from "@/lib/types";
+import type { InventoryItem, Room } from "@/lib/types";
+
+type RoomInventoryRow = Pick<
+  InventoryItem,
+  | "id"
+  | "name"
+  | "category"
+  | "manufacturer"
+  | "model"
+  | "serial_number"
+  | "photos"
+  | "warranty_expiry"
+  | "created_at"
+>;
 import { compressImage } from "@/lib/image-utils";
 
 const ROOM_TYPES = [
@@ -38,6 +52,7 @@ export default function RoomDetailPage() {
   const { status } = useSession();
 
   const [room, setRoom] = useState<Room | null>(null);
+  const [items, setItems] = useState<RoomInventoryRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -77,6 +92,7 @@ export default function RoomDetailPage() {
       }
       const data = await res.json();
       setRoom(data.room);
+      setItems(data.items ?? []);
       setName(data.room.name);
       setDescription(data.room.description || "");
       setRoomType(data.room.room_type || "Other");
@@ -500,6 +516,74 @@ export default function RoomDetailPage() {
                 ))}
               </ul>
             </div>
+          </div>
+        </div>
+
+        {/* Items assigned to this room (inventory.room_id) */}
+        <div className="mt-10 bg-white border border-[#e2e8f0] rounded-2xl overflow-hidden shadow-xl">
+          <div className="bg-gradient-to-r from-[#0f172b] to-[#1e293b] px-6 py-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Package className="size-5 text-white" />
+              <h2 className="text-xl font-bold text-white">
+                Items in this room
+              </h2>
+            </div>
+            <span className="text-sm font-semibold text-[#90a1b9]">
+              {items.length} total
+            </span>
+          </div>
+          <div className="p-6">
+            {items.length === 0 ? (
+              <p className="text-sm text-[#45556c] text-center py-8">
+                No inventory items are assigned to this room yet. Assign items
+                from an item&apos;s detail page or when adding an item.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {items.map((item) => {
+                  const thumb = item.photos?.[0];
+                  const subtitle = [item.manufacturer, item.model]
+                    .filter(Boolean)
+                    .join(" · ");
+                  return (
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          router.push(`/inventory/${item.id}`)
+                        }
+                        className="w-full flex items-center gap-4 p-4 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] hover:bg-white hover:border-[#009966] hover:shadow-md transition-all text-left cursor-pointer group"
+                      >
+                        <div className="relative size-14 shrink-0 rounded-lg overflow-hidden bg-[#e2e8f0]">
+                          {thumb ? (
+                            <Image
+                              src={thumb}
+                              alt=""
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full items-center justify-center">
+                              <Package className="size-6 text-[#90a1b9]" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-[#0f172b] truncate group-hover:text-[#007a55]">
+                            {item.name}
+                          </p>
+                          <p className="text-xs text-[#62748e] mt-0.5">
+                            {item.category}
+                            {subtitle ? ` · ${subtitle}` : ""}
+                          </p>
+                        </div>
+                        <ChevronRight className="size-5 text-[#90a1b9] shrink-0 group-hover:text-[#007a55]" />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
         </div>
       </div>

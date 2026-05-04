@@ -10,6 +10,7 @@ import {
   Loader2,
   Camera,
   Plus,
+  Package,
 } from "lucide-react";
 import AddRoomModal from "@/components/AddRoomModal";
 import Footer from "@/components/Footer";
@@ -168,8 +169,13 @@ export default function RoomsPage() {
                     <h3 className="text-lg font-bold text-[#0f172b] tracking-tight">
                       {room.name}
                     </h3>
+                    <p className="text-sm font-medium text-[#007a55] mt-2 inline-flex items-center gap-1.5">
+                      <Package className="size-4 shrink-0" />
+                      {room.item_count ?? 0} item
+                      {(room.item_count ?? 0) !== 1 ? "s" : ""} stored
+                    </p>
                     {room.description && (
-                      <p className="text-sm text-[#45556c] mt-1 line-clamp-2">
+                      <p className="text-sm text-[#45556c] mt-2 line-clamp-2">
                         {room.description}
                       </p>
                     )}
